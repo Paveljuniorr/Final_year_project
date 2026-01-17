@@ -28,7 +28,6 @@ function Login() {
         email: form.email,
         password: form.password,
         role: form.role,
-        roleCode: form.role !== "student" ? form.roleCode : undefined,
       });
 
       const { token, role } = res.data;
@@ -73,16 +72,6 @@ function Login() {
           <option value="teacher">Teacher</option>
           <option value="admin">Admin</option>
         </select>
-
-        {form.role !== "student" && (
-          <input
-            type="text"
-            name="roleCode"
-            placeholder="Enter Role Code"
-            required
-            onChange={handleChange}
-          />
-        )}
 
         <button type="submit">Login</button>
       </form>

@@ -17,17 +17,17 @@ body {
   justify-content: center;
   align-items: center;
 
- background-color: whitesmoke;
+ background-color: rgba(11, 147, 201, 0.801);
 }
 
 .login-card {
-  background: #0fb7eb;
-  padding: 35px;
+  background: rgb(37, 39, 39);
+  padding: 39px;
   width: 100%;
-  max-width: 420px;
+  max-width: 520px;
 
   border-radius: 10px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 29px rgba(0, 0, 0, 0.35);
 }
 
 .login-card h2 {

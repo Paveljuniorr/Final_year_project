@@ -1,10 +1,11 @@
 
-import RoleCode from "../models/RoleCode.js";
-import crypto from "crypto";
+import User from "../models/User.js";
 
-export const generateCode = async (req, res) => {
-  const { role } = req.body;
-  const code = crypto.randomBytes(4).toString("hex");
-  await RoleCode.create({ role, code });
-  res.json({ role, code });
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
