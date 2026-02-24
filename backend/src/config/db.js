@@ -11,4 +11,28 @@ const connectDB = async () => {
   }
 };
 
+
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: "./uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage });
+
+router.post(
+  "/complaints",
+  verifyToken,
+  upload.single("image"),
+  async (req, res) => {
+    const { title, description } = req.body;
+    const imagePath = req.file?.filename;
+
+    // Save to DB including imagePath
+  }
+);
+
 export default connectDB;

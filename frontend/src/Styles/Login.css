@@ -6,7 +6,7 @@
 }
 
 body {
-  background: #111;
+  background: #f1eded;
 }
 
 .login-container {
@@ -17,11 +17,11 @@ body {
   justify-content: center;
   align-items: center;
 
- background-color: rgba(11, 147, 201, 0.801);
+ background-color: rgba(101, 192, 228, 0.801);
 }
 
 .login-card {
-  background: rgb(37, 39, 39);
+  background: rgb(231, 238, 238);
   padding: 39px;
   width: 100%;
   max-width: 520px;

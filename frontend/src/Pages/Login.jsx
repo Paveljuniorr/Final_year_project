@@ -1,82 +1,65 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../API/axios";
-import "../styles/login.css";
+import "../Styles/Login.css";
 
-function Login() {
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { saveToken, getUserRole } from "../utils/auth";
+
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    role: "student",
-    roleCode: "",
-  });
-
-  const [error, setError] = useState("");
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
 
     try {
-      const res = await api.post("/auth/login", {
-        email: form.email,
-        password: form.password,
-        role: form.role,
+      const res = await axios.post("http://localhost:7000/api/auth/login", {
+        email,
+        password
       });
 
-      const { token, role } = res.data;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
+      saveToken(res.data.token);
+      const role = getUserRole();
 
       if (role === "student") navigate("/student");
-      if (role === "teacher") navigate("/teacher");
-      if (role === "admin") navigate("/admin");
+      else if (role === "teacher") navigate("/teacher");
+      else if (role === "admin") navigate("/admin");
+      else navigate("/login");
 
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+    } catch {
+      alert("Invalid credentials");
     }
   };
 
   return (
     <div className="login-container">
-      <form className="login-card" onSubmit={handleLogin}>
-        <h2>Smart Campus Login</h2>
+      <div className="login-card">
+        <form onSubmit={handleSubmit}>
+          <h2>Login</h2>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          onChange={handleChange}
-        />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          required
-          onChange={handleChange}
-        />
-
-        <select name="role" onChange={handleChange}>
-          <option value="student">Student</option>
-          <option value="teacher">Teacher</option>
-          <option value="admin">Admin</option>
-        </select>
-
-        <button type="submit">Login</button>
-      </form>
+          <button type="submit">Login</button>
+        </form>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;
+
