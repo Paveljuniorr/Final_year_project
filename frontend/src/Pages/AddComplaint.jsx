@@ -1,68 +1,66 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState } from "react"
+import API from "../API/axios"
 
-const AddComplaint = () => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
+export default function AddComplaint(){
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const [title,setTitle] = useState("")
+  const [description,setDescription] = useState("")
 
-    const token = localStorage.getItem("token");
+  const submitComplaint = async ()=>{
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("image", image);
+    try{
 
-    await axios.post(
-      "http://localhost:5000/api/student/complaints",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+      const token = localStorage.getItem("token")
 
-    alert("Complaint submitted");
-    setTitle("");
-    setDescription("");
-    setImage(null);
-  };
+      await API.post(
+        "/complaints/add",
+        { title, description },
+        {
+          headers:{
+            Authorization:`Bearer ${token}`
+          }
+        }
+      )
 
-  return (
-    <div>
-      <h1>Add Complaint</h1>
+      alert("Complaint submitted")
 
-      <form onSubmit={handleSubmit}>
+      setTitle("")
+      setDescription("")
+
+    }catch(error){
+      console.error(error)
+      alert("Error submitting complaint")
+    }
+
+  }
+
+  return(
+
+    <div className="dashboard-content">
+
+      <div className="card">
+
+        <h2>Add Complaint</h2>
+
         <input
-          type="text"
           placeholder="Complaint Title"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
+          onChange={(e)=>setTitle(e.target.value)}
         />
 
         <textarea
-          placeholder="Complaint Description"
+          placeholder="Describe your issue"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
+          onChange={(e)=>setDescription(e.target.value)}
+        ></textarea>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files[0])}
-        />
+        <button className="primary" onClick={submitComplaint}>
+          Submit Complaint
+        </button>
 
-        <button type="submit">Submit Complaint</button>
-      </form>
+      </div>
+
     </div>
-  );
-};
 
-export default AddComplaint;
+  )
+}

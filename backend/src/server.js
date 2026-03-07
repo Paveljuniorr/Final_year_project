@@ -1,26 +1,20 @@
+import express from "express"
+import mongoose from "mongoose"
+import cors from "cors"
 
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import connectDB from "./config/db.js";
-import authRoutes from "./routes/authRoutes.js";
-import setupRoutes from "./routes/setupRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
+import authRoutes from "./routes/authRoutes.js"
+import complaintRoutes from "./routes/ComplaintRoutes.js"
 
+const app = express()
 
+app.use(cors())
+app.use(express.json())
 
-dotenv.config();
-connectDB();
+app.use("/api/auth", authRoutes)
+app.use("/api/complaints", complaintRoutes)
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+mongoose.connect("mongodb://127.0.0.1:27017/smart-campus")
 
-app.use("/api/auth", authRoutes);
-app.use("/api/setup", setupRoutes);
-app.use("/api/users", userRoutes);
-
-
-app.listen(process.env.PORT, () =>
-  console.log(`Server running on port ${process.env.PORT}`)
-);
+app.listen(7000, () => {
+  console.log("Server running on port 7000")
+})

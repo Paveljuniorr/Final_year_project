@@ -1,5 +1,6 @@
 import AdminSidebar from "../components/AdminSidebar";
 import "../Styles/AdminDashboard.css";
+import AdminLayout from "../layouts/AdminLayout";
 
 const AdminDashboard = () => {
   return (

@@ -1,31 +1,44 @@
-import express from "express";
-import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+const express = require("express")
+const router = express.Router()
+const User = require("../models/User")
+const bcrypt = require("bcryptjs")
 
-const router = express.Router();
+// GET ALL USERS
+router.get("/",async(req,res)=>{
 
-// Any logged-in user
-router.get("/profile", protect, (req, res) => {
-  res.json(req.user);
-});
+  const users = await User.find()
 
-// Only admin
-router.get(
-  "/admin",
-  protect,
-  authorizeRoles("admin"),
-  (req, res) => {
-    res.json({ message: "Welcome Admin 👑" });
-  }
-);
+  res.json(users)
 
-// Teacher or admin
-router.get(
-  "/staff",
-  protect,
-  authorizeRoles("teacher", "admin"),
-  (req, res) => {
-    res.json({ message: "Welcome Staff 👨‍🏫" });
-  }
-);
+})
 
-export default router;
+
+// CREATE USER
+router.post("/create",async(req,res)=>{
+
+  const hashed = await bcrypt.hash(req.body.password,10)
+
+  const user = await User.create({
+
+    name:req.body.name,
+    email:req.body.email,
+    password:hashed,
+    role:req.body.role
+
+  })
+
+  res.json(user)
+
+})
+
+
+// DELETE USER
+router.delete("/:id",async(req,res)=>{
+
+  await User.findByIdAndDelete(req.params.id)
+
+  res.json({message:"User deleted"})
+
+})
+
+module.exports = router

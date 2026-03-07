@@ -1,7 +1,7 @@
 .student-dashboard {
   padding: 30px;
   min-height: 100vh;
-  background: #f4f6f9;
+  background: #d9e0eb;
 }
 
 .student-dashboard h1 {
@@ -16,7 +16,7 @@
 }
 
 .stat-card {
-  background: white;
+  background: rgb(102, 60, 60);
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -46,7 +46,7 @@
 }
 
 .complaints-card {
-  background: white;
+  background: rgb(82, 55, 235);
   padding: 20px;
   border-radius: 10px;
 }
@@ -56,6 +56,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+ 
 }
 
 select {

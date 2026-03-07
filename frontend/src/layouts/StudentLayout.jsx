@@ -1,16 +1,20 @@
-import { Outlet } from "react-router-dom";
-import StudentNavbar from "../components/StudentNavbar";
-import "../Styles/student.css";
+import { Outlet } from "react-router-dom"
+import StudentSidebar from "../components/StudentSidebar"
 
-const StudentLayout = () => {
-  return (
-    <div className="student-layout">
-      <StudentNavbar />
-      <main className="student-content">
-        <Outlet />
-      </main>
+export default function StudentLayout(){
+
+  return(
+
+    <div className="dashboard-layout">
+
+      <StudentSidebar/>
+
+      <div className="dashboard-content">
+        <Outlet/>
+      </div>
+
     </div>
-  );
-};
 
-export default StudentLayout;
+  )
+
+}

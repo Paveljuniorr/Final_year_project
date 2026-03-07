@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom"
 
-export default function AdminSidebar(){
+export default function StudentSidebar(){
 
   const navigate = useNavigate()
 
@@ -14,15 +14,21 @@ export default function AdminSidebar(){
 
     <div className="sidebar">
 
-      <h2>Admin Panel</h2>
+      <h2>Student Panel</h2>
 
       <nav>
 
-        <NavLink to="/admin">Dashboard</NavLink>
+        <NavLink to="/student">
+          Dashboard
+        </NavLink>
 
-        <NavLink to="/admin/users">Users</NavLink>
+        <NavLink to="/student/add-complaint">
+          Add Complaint
+        </NavLink>
 
-        <NavLink to="/admin/complaints">Complaints</NavLink>
+        <NavLink to="/student/complaints">
+          My Complaints
+        </NavLink>
 
         <button onClick={logout}>
           Logout
@@ -33,6 +39,6 @@ export default function AdminSidebar(){
     </div>
 
   )
-
 }
 
+    
