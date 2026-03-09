@@ -1,52 +1,74 @@
-import {useEffect,useState} from "react";
-import API from "../API/axios";
+import { useEffect, useState } from "react"
+import API from "../API/axios"
+import TeacherSidebar from "../components/TeacherSidebar"
 
 export default function TeacherDashboard(){
 
-const [complaints,setComplaints] = useState([]);
+const [complaints,setComplaints] = useState([])
 
 useEffect(()=>{
 
-fetchComplaints();
+  const fetchComplaints = async ()=>{
 
-},[]);
+    try{
 
-const fetchComplaints = async()=>{
+      const token = localStorage.getItem("token")
 
-const token = localStorage.getItem("token");
+      const res = await API.get("/complaints",{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      })
 
-const res = await API.get(
-"/complaints/all",
-{
-headers:{
-Authorization:`Bearer ${token}`
-}
-}
-);
+      setComplaints(res.data)
 
-setComplaints(res.data);
+    }catch(err){
+      console.error(err)
+    }
 
-};
+  }
+
+  fetchComplaints()
+
+},[])
 
 return(
 
-<div>
+<div className="dashboard-layout">
 
-<h2>Student Complaints</h2>
+<TeacherSidebar/>
 
-{complaints.map(c=>(
-<div key={c._id}>
+<div className="dashboard-content">
 
-<h3>{c.title}</h3>
+<h2>Teacher Complaints</h2>
 
-<p>{c.description}</p>
+<table>
 
-<p>Status: {c.status}</p>
+<thead>
+<tr>
+<th>Student</th>
+<th>Title</th>
+<th>Status</th>
+</tr>
+</thead>
 
-<p>Student: {c.student?.name}</p>
+<tbody>
+
+{complaints.map(c => (
+
+<tr key={c._id}>
+<td>{c.student?.name}</td>
+<td>{c.title}</td>
+<td>{c.status}</td>
+</tr>
+
+))}
+
+</tbody>
+
+</table>
 
 </div>
-))}
 
 </div>
 

@@ -1,9 +1,11 @@
+import 'dotenv/config';
 import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
 
 import authRoutes from "./routes/authRoutes.js"
 import complaintRoutes from "./routes/ComplaintRoutes.js"
+
 
 const app = express()
 

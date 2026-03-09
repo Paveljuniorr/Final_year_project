@@ -6,34 +6,34 @@ export default function AddComplaint(){
   const [title,setTitle] = useState("")
   const [description,setDescription] = useState("")
 
-  const submitComplaint = async ()=>{
+ const submitComplaint = async () => {
+  try {
 
-    try{
+    const token = localStorage.getItem("token")
 
-      const token = localStorage.getItem("token")
-
-      await API.post(
-        "/complaints/add",
-        { title, description },
-        {
-          headers:{
-            Authorization:`Bearer ${token}`
-          }
+    await API.post(
+      "/complaints",
+      {
+        title,
+        description
+      },
+      {
+        headers:{
+          Authorization:`Bearer ${token}`
         }
-      )
+      }
+    )
 
-      alert("Complaint submitted")
+    alert("Complaint submitted successfully")
 
-      setTitle("")
-      setDescription("")
+    setTitle("")
+    setDescription("")
 
-    }catch(error){
-      console.error(error)
-      alert("Error submitting complaint")
-    }
-
+  } catch(error){
+    console.error(error)
+    alert("Error submitting complaint")
   }
-
+}
   return(
 
     <div className="dashboard-content">

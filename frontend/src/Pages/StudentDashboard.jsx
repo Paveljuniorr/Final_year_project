@@ -3,64 +3,55 @@ import API from "../API/axios"
 
 export default function StudentDashboard(){
 
-  const [complaints,setComplaints] = useState([])
+const [complaints,setComplaints] = useState([])
 
-  useEffect(()=>{
+useEffect(()=>{
 
-    const fetchComplaints = async ()=>{
+  const fetchComplaints = async ()=>{
 
-      try{
+    try{
 
-        const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token")
 
-        const res = await API.get("/complaints/student",{
-          headers:{
-            Authorization:`Bearer ${token}`
-          }
-        })
+      const res = await API.get("/complaints/my",{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      })
 
-        setComplaints(res.data)
+      setComplaints(res.data)
 
-      }catch(err){
-        console.log(err)
-      }
-
+    }catch(err){
+      console.error(err)
     }
 
-    fetchComplaints()
+  }
 
-  },[])
+  fetchComplaints()
 
-  const total = complaints.length
-  const pending = complaints.filter(c=>c.status==="pending").length
-  const resolved = complaints.filter(c=>c.status==="resolved").length
+},[])
 
-  return(
 
-    <div className="dashboard-content">
+return(
 
-      <h1>Student Dashboard</h1>
+<div>
 
-      <div className="stats">
+<h2>My Complaints</h2>
 
-        <div className="card">
-          <h3>Total Complaints</h3>
-          <p>{total}</p>
-        </div>
+<ul>
 
-        <div className="card">
-          <h3>Pending</h3>
-          <p>{pending}</p>
-        </div>
+{complaints.map(c => (
 
-        <div className="card">
-          <h3>Resolved</h3>
-          <p>{resolved}</p>
-        </div>
+<li key={c._id}>
+{c.title} - {c.status}
+</li>
 
-      </div>
+))}
 
-    </div>
+</ul>
 
-  )
+</div>
+
+)
+
 }

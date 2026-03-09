@@ -4,7 +4,7 @@ import {
   getMyComplaints,
   getAllComplaints,
   updateComplaintStatus
-} from "../controllers/complaintController.js"
+} from "../controllers/ComplaintController.js"
 
 const router = express.Router()
 
