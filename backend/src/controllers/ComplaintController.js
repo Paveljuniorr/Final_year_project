@@ -1,100 +1,63 @@
-import Complaint from "../models/Complaint.js"
+import Complaint from "../models/Complaint.js";
 
-//
-// STUDENT - CREATE COMPLAINT
-//
+
 export const createComplaint = async (req, res) => {
-
   try {
-
-    const { title, description } = req.body
-
-    const complaint = new Complaint({
+    const { title, description, category } = req.body;
+    const newComplaint = new Complaint({
       title,
       description,
-      student: req.user.id,
-      status: "pending"
-    })
+      category,
+      student: req.user.id, 
+    });
 
-    await complaint.save()
-
-    res.json({
-      message: "Complaint submitted",
-      complaint
-    })
-
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
+    await newComplaint.save();
+    res.status(201).json(newComplaint);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
+};
 
-}
 
-//
-// STUDENT - GET THEIR COMPLAINTS
-//
-export const getMyComplaints = async (req, res) => {
-
-  try {
-
-    const complaints = await Complaint.find({
-      student: req.user.id
-    }).sort({ createdAt: -1 })
-
-    res.json(complaints)
-
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
-  }
-
-}
-
-//
-// ADMIN - GET ALL COMPLAINTS
-//
 export const getAllComplaints = async (req, res) => {
-
   try {
-
-    const complaints = await Complaint
-      .find()
+    
+    const complaints = await Complaint.find()
       .populate("student", "name email")
-      .sort({ createdAt: -1 })
-
-    res.json(complaints)
-
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
+      .sort({ createdAt: -1 });
+    res.json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
+};
 
-}
-
-//
-// ADMIN - UPDATE COMPLAINT STATUS
-//
-export const updateComplaintStatus = async (req, res) => {
-
+export const getMyComplaints = async (req, res) => {
   try {
-
-    const { status } = req.body
-
-    const complaint = await Complaint.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    )
-
-    res.json(complaint)
-
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
+    const complaints = await Complaint.find({ student: req.user.id })
+      .sort({ createdAt: -1 });
+    res.json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
+};
 
-}
+
+export const updateComplaintStatus = async (req, res) => {
+  try {
+    const { status, adminFeedback } = req.body;
+    
+    const updatedComplaint = await Complaint.findByIdAndUpdate(
+      req.params.id,
+      { status, adminFeedback },
+      { new: true } 
+    );
+
+    if (!updatedComplaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.json(updatedComplaint);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

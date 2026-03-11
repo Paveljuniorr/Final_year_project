@@ -1,30 +1,13 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const complaintSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  category: { type: String, required: true },
+  status: { type: String, default: "pending" },
+  student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+ 
+  adminFeedback: { type: String, default: "" }, 
+}, { timestamps: true });
 
-  title:{
-    type:String,
-    required:true
-  },
-
-  description:{
-    type:String,
-    required:true
-  },
-
-  student:{
-    type:mongoose.Schema.Types.ObjectId,
-    ref:"User"
-  },
-
-  status:{
-    type:String,
-    enum:["pending","resolved","rejected"],
-    default:"pending"
-  }
-
-},{timestamps:true})
-
-const Complaint = mongoose.model("Complaint",complaintSchema)
-
-export default Complaint
+export default mongoose.model("Complaint", complaintSchema);

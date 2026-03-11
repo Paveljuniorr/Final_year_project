@@ -8,7 +8,7 @@ const StudentProfile = () => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/api/student/profile", {
+      const res = await axios.get("http://localhost:7000/api/student/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
 

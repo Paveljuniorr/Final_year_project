@@ -43,7 +43,7 @@
   padding:10px;
   border:none;
   background:#ef4444;
-  color:white;
+  color:rgb(32, 30, 30);
   border-radius:6px;
   cursor:pointer;
 }
@@ -53,14 +53,14 @@
 .dashboard-content{
   flex:1;
   padding:30px;
-  background:#f3f4f6;
+  background:#6464b1;
   overflow:auto;
 }
 
 /* Cards */
 
 .card{
-  background:white;
+  background:rgb(243, 237, 237);
   padding:20px;
   margin-bottom:15px;
   border-radius:8px;
@@ -75,12 +75,12 @@ input, textarea{
   margin-top:10px;
   margin-bottom:15px;
   border-radius:6px;
-  border:1px solid #ccc;
+  border:1px solid #080808;
 }
 
 button.primary{
   background:#2563eb;
-  color:white;
+  color:rgb(231, 225, 225);
   border:none;
   padding:10px 15px;
   border-radius:6px;
@@ -112,7 +112,7 @@ table td{
 }
 
 .badge.pending{
-  background:#fff3cd;
+  background:#131312;
   color:#856404;
 }
 

@@ -4,20 +4,15 @@ import {
   getMyComplaints,
   getAllComplaints,
   updateComplaintStatus
-} from "../controllers/ComplaintController.js"
+} from "../controllers/ComplaintController.js" // Note: fixed the capitalization here too!
+import { protect } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// Student submits complaint
-router.post("/", createComplaint)
-
-// Student sees their complaints
-router.get("/my", getMyComplaints)
-
-// Admin sees all complaints
-router.get("/", getAllComplaints)
-
-// Admin updates status
-router.put("/:id", updateComplaintStatus)
+// Apply 'protect' so req.user is populated!
+router.post("/", protect, createComplaint)
+router.get("/my", protect, getMyComplaints)
+router.get("/", protect, getAllComplaints)
+router.put("/:id", protect, updateComplaintStatus)
 
 export default router

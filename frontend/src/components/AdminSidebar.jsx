@@ -17,13 +17,13 @@ export default function AdminSidebar(){
       <h2>Admin Panel</h2>
 
       <nav>
-
+       
         <NavLink to="/admin">Dashboard</NavLink>
 
         <NavLink to="/admin/users">Users</NavLink>
 
         <NavLink to="/admin/complaints">Complaints</NavLink>
-
+        
         <button onClick={logout}>
           Logout
         </button>

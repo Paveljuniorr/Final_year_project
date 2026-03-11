@@ -1,66 +1,54 @@
-import { useState } from "react"
-import API from "../API/axios"
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../API/axios";
 
-export default function AddComplaint(){
+const AddComplaint = () => {
+  const [formData, setFormData] = useState({ title: "", description: "", category: "General" });
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
-  const [title,setTitle] = useState("")
-  const [description,setDescription] = useState("")
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
- const submitComplaint = async () => {
-  try {
-
-    const token = localStorage.getItem("token")
-
-    await API.post(
-      "/complaints",
-      {
-        title,
-        description
-      },
-      {
-        headers:{
-          Authorization:`Bearer ${token}`
-        }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setMessage("You must be logged in to submit a complaint.");
+        return;
       }
-    )
 
-    alert("Complaint submitted successfully")
+      await API.post("/complaints", formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    setTitle("")
-    setDescription("")
+      setMessage("Complaint submitted successfully!");
+      // Redirect to dashboard so the student can see their new complaint
+      setTimeout(() => navigate("/student/dashboard"), 1500);
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Failed to submit complaint");
+    }
+  };
 
-  } catch(error){
-    console.error(error)
-    alert("Error submitting complaint")
-  }
-}
-  return(
-
-    <div className="dashboard-content">
-
-      <div className="card">
-
-        <h2>Add Complaint</h2>
-
-        <input
-          placeholder="Complaint Title"
-          value={title}
-          onChange={(e)=>setTitle(e.target.value)}
-        />
-
-        <textarea
-          placeholder="Describe your issue"
-          value={description}
-          onChange={(e)=>setDescription(e.target.value)}
-        ></textarea>
-
-        <button className="primary" onClick={submitComplaint}>
-          Submit Complaint
-        </button>
-
-      </div>
-
+  return (
+    <div className="add-complaint-container">
+      <h2>Submit a Complaint</h2>
+      {message && <p className="message">{message}</p>}
+      <form onSubmit={handleSubmit}>
+        <input name="title" placeholder="Title" onChange={handleChange} required />
+        <textarea name="description" placeholder="Description" onChange={handleChange} required />
+        <select name="category" onChange={handleChange}>
+          <option value="General">General</option>
+          <option value="Hostel">Hostel</option>
+          <option value="Academic">Academic</option>
+          <option value="Facilities">Facilities</option>
+        </select>
+        <button type="submit">Submit</button>
+      </form>
     </div>
+  );
+};
 
-  )
-}
+export default AddComplaint;

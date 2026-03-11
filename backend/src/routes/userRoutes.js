@@ -1,44 +1,42 @@
-const express = require("express")
-const router = express.Router()
-const User = require("../models/User")
-const bcrypt = require("bcryptjs")
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import User from '../models/User.js';
+import { protect, isAdmin } from '../middleware/authMiddleware.js';
+import { 
+  getAllUsers, 
+  getAdminStats, 
+  adminCreateUser, 
+  updateUserRole, 
+  deleteUser 
+} from '../controllers/UserController.js';
 
-// GET ALL USERS
-router.get("/",async(req,res)=>{
+const router = express.Router();
 
-  const users = await User.find()
-
-  res.json(users)
-
-})
-
-
-// CREATE USER
-router.post("/create",async(req,res)=>{
-
-  const hashed = await bcrypt.hash(req.body.password,10)
-
-  const user = await User.create({
-
-    name:req.body.name,
-    email:req.body.email,
-    password:hashed,
-    role:req.body.role
-
-  })
-
-  res.json(user)
-
-})
+// --- ADMIN ROUTES (Protected) ---
 
 
-// DELETE USER
-router.delete("/:id",async(req,res)=>{
+router.get("/", protect, isAdmin, getAllUsers);
+router.get("/stats", protect, isAdmin, getAdminStats);
 
-  await User.findByIdAndDelete(req.params.id)
+router.post("/admin/create-user", protect, isAdmin, adminCreateUser);
 
-  res.json({message:"User deleted"})
+router.put("/:id/role", protect, isAdmin, updateUserRole);
 
-})
+router.delete("/:id", protect, isAdmin, deleteUser);
 
-module.exports = router
+router.post("/create", async (req, res) => {
+    try {
+        const hashed = await bcrypt.hash(req.body.password, 10);
+        const user = await User.create({
+            name: req.body.name,
+            email: req.body.email,
+            password: hashed,
+            role: req.body.role
+        });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+export default router;

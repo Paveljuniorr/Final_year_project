@@ -37,7 +37,7 @@ const Login = () => {
       <div className="login-card">
         <form onSubmit={handleSubmit}>
           <h2>Login</h2>
-
+          <h3>Don't have an account? <a href="/register">Sign up</a></h3>
           <input
             type="email"
             placeholder="Email"
