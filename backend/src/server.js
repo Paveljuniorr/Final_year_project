@@ -7,7 +7,6 @@ import authRoutes from "./routes/authRoutes.js"
 import complaintRoutes from "./routes/ComplaintRoutes.js"
 
 import userRoutes from "./routes/userRoutes.js" 
-
 const app = express()
 
 app.use(cors())

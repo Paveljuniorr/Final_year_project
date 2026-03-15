@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Protect routes
+
 export const protect = async (req, res, next) => {
   let token;
 
@@ -30,7 +30,7 @@ export const protect = async (req, res, next) => {
   return res.status(401).json({ message: "Not authorized, no token" });
 };
 
-// Role-based access control
+
 export const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
@@ -46,5 +46,12 @@ export const isAdmin = (req, res, next) => {
     next();
   } else {
     res.status(403).json({ message: "Access denied. Admins only." });
+  }
+};
+export const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: "Not authorized as an admin" });
   }
 };

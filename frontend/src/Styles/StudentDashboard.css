@@ -16,18 +16,17 @@
 }
 
 .subtitle {
-  color: #718096;
+  color: #d6d9dd;
   margin-top: 5px;
 }
 
-/* Grid Layout */
+
 .complaint-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 25px;
 }
 
-/* Card Styling */
 .complaint-card {
   background: #ffffff;
   border-radius: 12px;
@@ -46,9 +45,9 @@
   border-color: #cbd5e0;
 }
 
-/* Visibility Fixes */
+
 .complaint-title {
-  color: #2d3748 !important; /* Dark text */
+  color: #2d3748 !important; 
   font-size: 1.25rem;
   margin: 0;
   flex: 1;
@@ -65,13 +64,13 @@
 }
 
 .description-preview {
-  color: #4a5568 !important; /* Explicit gray-dark color */
+  color: #4a5568 !important; 
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;
 }
 
-/* Status Badges */
+
 .status-badge {
   padding: 4px 12px;
   border-radius: 20px;
@@ -84,7 +83,7 @@
 .status-badge.resolved { background: #f0fff4; color: #22543d; border: 1px solid #c6f6d5; }
 .status-badge.rejected { background: #fff5f5; color: #822727; border: 1px solid #fed7d7; }
 
-/* Buttons */
+
 .details-btn {
   margin-top: 20px;
   width: 100%;
@@ -102,9 +101,281 @@
   background-color: #2b6cb0;
 }
 
-/* Loading/Empty States */
+
 .loading-container, .empty-state {
   text-align: center;
   padding: 100px 0;
   color: #718096;
+}
+
+.profile-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.profile-card {
+  background: white;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #edf2f7;
+  padding-bottom: 20px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  background: #3182ce;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+}
+
+.profile-name {
+  color: #1a202c !important; 
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 12px;
+  background: #ebf8ff;
+  color: #2b6cb0;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.detail-group {
+  margin-bottom: 20px;
+}
+
+.detail-group label {
+  display: block;
+  color: #718096;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.detail-group p {
+  color: #2d3748 !important; 
+  font-size: 1.1rem;
+  margin: 0;
+  padding: 10px;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+.add-complaint-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.form-card {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2d3748;
+}
+
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  padding: 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #2d3748; 
+  background-color: #fff;
+}
+
+.form-group textarea {
+  height: 120px;
+  resize: vertical;
+}
+
+.submit-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.student-sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  padding: 20px; 
+  position: fixed;
+}
+
+.sidebar-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #3b82f6;
+  margin-bottom: 40px; 
+  align-self: flex-start; 
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+
+
+.profile-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 60px 20px;
+  background-color: #f8fafc; 
+  min-height: 100vh;
+}
+
+
+.profile-card {
+  background: white;
+  width: 100%;
+  max-width: 550px;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.profile-name {
+  color: #0f172a;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 4px 16px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border: 1px solid #dbeafe;
+}
+
+
+.profile-details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.detail-group label {
+  display: block;
+  color: #64748b; 
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 8px;
+}
+
+.detail-group p {
+  color: #1e293b !important;
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin: 0;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  transition: border-color 0.2s;
+}
+
+.detail-group p:hover {
+  border-color: #cbd5e0;
+}
+
+.status-active {
+  color: #059669 !important; 
+  font-weight: 700 !important;
+}
+
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-weight: 600;
+  color: #64748b;
 }

@@ -11,7 +11,7 @@ import StudentComplaints from "./Pages/StudentComplaints";
 import TeacherDashboard from "./Pages/TeacherDashboard";
 import Sidebar from "./components/Sidebar";
 import AdminDashboard from "./Pages/AdminDashboard";
-import AdminUsers from "./assets/AdminUsers";
+import AdminUsers from "./Pages/Admin/AdminUsers";
 import AdminComplaints from "./Pages/AdminComplaints";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,7 +23,7 @@ function App() {
       <Route path="/register" element={<Registration />} />
       <Route path="/login" element={<Login />} />
 
-      {/* STUDENT ROUTES */}
+     
       <Route
         element={
           <ProtectedRoute allowedRoles={["student"]}>
@@ -37,7 +37,7 @@ function App() {
         <Route path="/student/complaints" element={<StudentComplaints />} />
       </Route>
 
-      {/* TEACHER ROUTES - Wrapped in Layout */}
+     
       <Route
         element={
           <ProtectedRoute allowedRoles={["teacher"]}>
@@ -53,7 +53,7 @@ function App() {
         <Route path="/teacher" element={<TeacherDashboard />} />
       </Route>
 
-      {/* ADMIN ROUTES - Wrapped in Layout */}
+    
       <Route
         element={
           <ProtectedRoute allowedRoles={["admin"]}>

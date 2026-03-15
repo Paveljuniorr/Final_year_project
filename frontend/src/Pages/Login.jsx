@@ -1,5 +1,5 @@
 import "../Styles/Login.css";
-
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +37,6 @@ const Login = () => {
       <div className="login-card">
         <form onSubmit={handleSubmit}>
           <h2>Login</h2>
-          <h3>Don't have an account? <a href="/register">Sign up</a></h3>
           <input
             type="email"
             placeholder="Email"
@@ -55,6 +54,9 @@ const Login = () => {
           />
 
           <button type="submit">Login</button>
+         <p className="signup-text">
+            Don't have an account? <Link to="/register">Sign up</Link>
+       </p>
         </form>
       </div>
     </div>

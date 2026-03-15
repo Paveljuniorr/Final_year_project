@@ -9,7 +9,6 @@ const StudentComplaints = () => {
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
 
-  // 1. Fetch Logic
   const fetchComplaints = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -26,7 +25,6 @@ const StudentComplaints = () => {
     fetchComplaints();
   }, []);
 
-  // 2. Filter & Search Logic
   const filtered = complaints
     .filter((c) => {
       const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase());
@@ -34,7 +32,6 @@ const StudentComplaints = () => {
       return matchesSearch && matchesStatus;
     });
 
-  // 3. Pagination Logic
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice(
     (page - 1) * itemsPerPage,
@@ -105,7 +102,6 @@ const StudentComplaints = () => {
         </tbody>
       </table>
 
-      {/* Pagination Controls */}
       {filtered.length > itemsPerPage && (
         <div className="pagination mt-4 flex justify-center items-center gap-4">
           <button 

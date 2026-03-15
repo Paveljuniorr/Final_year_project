@@ -29,7 +29,7 @@ export default function StudentSidebar(){
         <NavLink to="/student/complaints">
           My Complaints
         </NavLink>
-
+         <NavLink to="/student/profile">View Profile</NavLink>
         <button onClick={logout}>
           Logout
         </button>

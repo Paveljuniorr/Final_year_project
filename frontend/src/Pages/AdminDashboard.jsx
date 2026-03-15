@@ -7,43 +7,47 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const { data } = await API.get("/users/stats", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setStats(data);
-  } catch (err) {
-    console.error("Failed to fetch stats. Is the route defined in the backend?", err.message);
-  }
-};
+      try {
+        const token = localStorage.getItem("token");
+        const { data } = await API.get("/users/stats", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to fetch stats:", err.message);
+      }
+    };
     fetchStats();
   }, []);
 
   return (
-    <div className="admin-layout">
-      
-      <main className="admin-content">
-        <h1>Admin Dashboard</h1>
-        <div className="stats-grid">
-          <div className="stat-card">
-            <h3>Total Students</h3>
-            <p>{stats.students?.toString().padStart(2, '0') || "00"}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Total Teachers</h3>
-            <p>{stats.teachers?.toString().padStart(2, '0') || "00"}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Total Reports</h3>
-            <p>{stats.reports?.toString().padStart(2, '0') || "00"}</p>
-          </div>
-          <div className="stat-card">
-            <h3>System Status</h3>
-            <p className="ok">Online</p>
-          </div>
+    
+    <div className="admin-main-section">
+      <div className="admin-top-bar">
+        <h1 className="main-title">Admin Dashboard</h1>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <p className="label">Total Students</p>
+          <p className="value">{stats.students?.toString().padStart(2, '0') || "00"}</p>
         </div>
-      </main>
+
+        <div className="stat-card">
+          <p className="label">Total Teachers</p>
+          <p className="value">{stats.teachers?.toString().padStart(2, '0') || "00"}</p>
+        </div>
+
+        <div className="stat-card">
+          <p className="label">Total Reports</p>
+          <p className="value">{stats.reports?.toString().padStart(2, '0') || "00"}</p>
+        </div>
+
+        <div className="stat-card">
+          <p className="label">System Status</p>
+          <p className="value" style={{ color: '#10b981' }}>Online</p>
+        </div>
+      </div>
     </div>
   );
 };

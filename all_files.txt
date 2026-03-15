@@ -31,12 +31,12 @@ firstPRO/
 │   │   ├── API/
 │   │   │   └── axios.js
 │   │   ├── assets/
-│   │   │   ├── AdminUsers.jsx
 │   │   │   └── react.svg
 │   │   ├── components/
 │   │   │   ├── AdminSidebar.jsx
 │   │   │   ├── ComplaintModal.jsx
 │   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── Sidebar.jsx
 │   │   │   ├── StudentSidebar.jsx
 │   │   │   └── TeacherSidebar.jsx
 │   │   ├── layouts/
@@ -48,6 +48,7 @@ firstPRO/
 │   │   │   ├── AddComplaint.jsx
 │   │   │   ├── AdminComplaints.jsx
 │   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── HomePage.jsx
 │   │   │   ├── Login.jsx
 │   │   │   ├── Registration.jsx
 │   │   │   ├── StudentComplaints.jsx
@@ -56,11 +57,12 @@ firstPRO/
 │   │   │   └── TeacherDashboard.jsx
 │   │   ├── Styles/
 │   │   │   ├── AdminDashboard.css
-│   │   │   ├── AdminSidebar.css
 │   │   │   ├── Auth.css
 │   │   │   ├── Dashboard.css
+│   │   │   ├── HomePage.css
 │   │   │   ├── Login.css
 │   │   │   ├── Modal.css
+│   │   │   ├── Sidebar.css
 │   │   │   └── StudentDashboard.css
 │   │   ├── utils/
 │   │   │   └── auth.js
@@ -79,7 +81,7 @@ firstPRO/
 └── collect.py
 
 ============================================================
-  FILE INDEX  (57 files total)
+  FILE INDEX  (59 files total)
 ============================================================
 
 all_files.txt
@@ -115,6 +117,7 @@ frontend\src\API\axios.js
 frontend\src\Pages\AddComplaint.jsx
 frontend\src\Pages\AdminComplaints.jsx
 frontend\src\Pages\AdminDashboard.jsx
+frontend\src\Pages\HomePage.jsx
 frontend\src\Pages\Login.jsx
 frontend\src\Pages\Registration.jsx
 frontend\src\Pages\StudentComplaints.jsx
@@ -123,17 +126,18 @@ frontend\src\Pages\StudentProfile.jsx
 frontend\src\Pages\TeacherDashboard.jsx
 frontend\src\Pages\Admin\AdminUsers.jsx
 frontend\src\Styles\AdminDashboard.css
-frontend\src\Styles\AdminSidebar.css
 frontend\src\Styles\Auth.css
 frontend\src\Styles\Dashboard.css
+frontend\src\Styles\HomePage.css
 frontend\src\Styles\Login.css
 frontend\src\Styles\Modal.css
+frontend\src\Styles\Sidebar.css
 frontend\src\Styles\StudentDashboard.css
-frontend\src\assets\AdminUsers.jsx
 frontend\src\assets\react.svg
 frontend\src\components\AdminSidebar.jsx
 frontend\src\components\ComplaintModal.jsx
 frontend\src\components\ProtectedRoute.jsx
+frontend\src\components\Sidebar.jsx
 frontend\src\components\StudentSidebar.jsx
 frontend\src\components\TeacherSidebar.jsx
 frontend\src\layouts\AdminLayout.jsx
@@ -141,7 +145,7 @@ frontend\src\layouts\StudentLayout.jsx
 frontend\src\utils\auth.js
 
 ============================================================
-  FILE CONTENTS  (54 readable text files)
+  FILE CONTENTS  (56 readable text files)
 ============================================================
 
 ------------------------------------------------------------
@@ -1892,7 +1896,6 @@ import authRoutes from "./routes/authRoutes.js"
 import complaintRoutes from "./routes/ComplaintRoutes.js"
 
 import userRoutes from "./routes/userRoutes.js" 
-
 const app = express()
 
 app.use(cors())
@@ -1936,124 +1939,110 @@ export default connectDB;
 File: ComplaintController.js
 Path: backend\src\controllers\ComplaintController.js
 ------------------------------------------------------------
-import Complaint from "../models/Complaint.js"
+import Complaint from "../models/Complaint.js";
+import User from "../models/User.js";
 
-//
-// STUDENT - CREATE COMPLAINT
-//
 export const createComplaint = async (req, res) => {
-
   try {
+    const { title, description, category, recipientRole, assignedTeacher } = req.body;
 
-    const { title, description } = req.body
-
-    const complaint = new Complaint({
+    const newComplaint = new Complaint({
+      student: req.user.id,
       title,
       description,
-      student: req.user.id,
-      status: "pending"
-    })
+      category,
+      recipientRole: recipientRole || "admin",
+     
+      assignedTeacher: recipientRole === "teacher" ? assignedTeacher : null,
+    });
 
-    await complaint.save()
-
-    res.json({
-      message: "Complaint submitted",
-      complaint
-    })
-
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
+    await newComplaint.save();
+    res.status(201).json({ message: "Complaint submitted successfully!", complaint: newComplaint });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
+};
 
-}
-
-//
-// STUDENT - GET THEIR COMPLAINTS
-//
-export const getMyComplaints = async (req, res) => {
-
-  try {
-
-    const complaints = await Complaint.find({
-      student: req.user.id
-    }).sort({ createdAt: -1 })
-
-    res.json(complaints)
-
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
-  }
-
-}
-
-//
-// ADMIN - GET ALL COMPLAINTS
-//
 export const getAllComplaints = async (req, res) => {
-
   try {
+    let query = {};
 
-    const complaints = await Complaint
-      .find()
-      .populate("student", "name email")
-      .sort({ createdAt: -1 })
+    if (req.user.role === "admin") {
+     
+      query = { recipientRole: "admin" };
+    } else if (req.user.role === "teacher") {
+     
+      query = { assignedTeacher: req.user.id };
+    }
 
-    res.json(complaints)
+    const complaints = await Complaint.find(query)
+      .populate("student", "name email department")
+      .sort({ createdAt: -1 });
 
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
+    res.json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
+};
 
-}
+export const getMyComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find({ student: req.user.id })
+      .populate("assignedTeacher", "name") 
+      .sort({ createdAt: -1 });
+    res.json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-//
-// ADMIN - UPDATE COMPLAINT STATUS
-//
 export const updateComplaintStatus = async (req, res) => {
-
   try {
-
-    const { status } = req.body
-
-    const complaint = await Complaint.findByIdAndUpdate(
+    const { status, adminFeedback } = req.body;
+    
+    const updatedComplaint = await Complaint.findByIdAndUpdate(
       req.params.id,
-      { status },
-      { new: true }
-    )
+      { status, adminFeedback },
+      { new: true } 
+    );
 
-    res.json(complaint)
+    if (!updatedComplaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
 
-  } catch (error) {
-
-    res.status(500).json({ message: error.message })
-
+    res.json(updatedComplaint);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-
-}
+};
+export const getTeachersList = async (req, res) => {
+  try {
+    
+    const teachers = await User.find({ role: "teacher" }).select("name _id department");
+    res.json(teachers);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching teachers" });
+  }
+};
 
 ------------------------------------------------------------
 File: UserController.js
 Path: backend\src\controllers\UserController.js
 ------------------------------------------------------------
 import User from "../models/User.js";
+import Complaint from "../models/Complaint.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
+// 1. Register Student
 export const registerStudent = async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: "User already exists" });
 
-    // Force role to student for public registration
     const user = await User.create({ name, email, password, role: "student" });
     res.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role, token: generateToken(user._id) });
   } catch (error) {
@@ -2061,6 +2050,7 @@ export const registerStudent = async (req, res) => {
   }
 };
 
+// 2. Login User
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -2074,9 +2064,10 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// 3. Admin Create User (The one that was missing!)
 export const adminCreateUser = async (req, res) => {
   const { name, email, password, role } = req.body;
-
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: "User already exists" });
@@ -2085,7 +2076,7 @@ export const adminCreateUser = async (req, res) => {
       name,
       email,
       password,
-      role: role || "teacher", // Defaults to teacher if not specified
+      role: role || "teacher", 
     });
 
     res.status(201).json({
@@ -2096,33 +2087,36 @@ export const adminCreateUser = async (req, res) => {
     res.status(500).json({ message: "Error creating user" });
   }
 };
-// Get all users (Admin only)
+
+// 4. Get All Users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}).select("-password"); // Don't send passwords!
+    const users = await User.find({}).select("-password");
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users" });
   }
 };
 
-// Get counts for dashboard stats
-export const getAdminStats = async (req, res) => {
+// 5. Get Dashboard Stats (Corrected to count reports!)
+export const getStats = async (req, res) => {
   try {
-    const studentCount = await User.countDocuments({ role: "student" });
-    const teacherCount = await User.countDocuments({ role: "teacher" });
-
+    const studentCount = await User.countDocuments({ role: 'student' });
+    const teacherCount = await User.countDocuments({ role: 'teacher' });
+    const reportCount = await Complaint.countDocuments(); 
 
     res.json({
       students: studentCount,
       teachers: teacherCount,
-      reports: 0 // Placeholder until Complaint model is fully integrated
+      reports: reportCount
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching stats" });
+    console.error("Stats Error:", error);
+    res.status(500).json({ message: "Server error fetching statistics" });
   }
 };
-// Update user role (Admin only)
+
+// 6. Update User Role (Also often imported in routes)
 export const updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
@@ -2139,13 +2133,12 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
-// Delete user (Admin only)
+// 7. Delete User
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     
-    // Safety check: Prevent admin from deleting themselves
     if (user._id.toString() === req.user.id) {
       return res.status(400).json({ message: "You cannot delete your own admin account" });
     }
@@ -2161,15 +2154,27 @@ export const deleteUser = async (req, res) => {
 File: adminController.js
 Path: backend\src\controllers\adminController.js
 ------------------------------------------------------------
-
 import User from "../models/User.js";
+import Complaint from "../models/Complaint.js";
+
+export const getAdminStats = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalComplaints = await Complaint.countDocuments(); 
+    const pendingComplaints = await Complaint.countDocuments({ status: "Pending" });
+
+    res.json({ totalUsers, totalComplaints, pendingComplaints });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching stats", error: error.message });
+  }
+};
 
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Error fetching users" });
   }
 };
 
@@ -2179,9 +2184,9 @@ Path: backend\src\controllers\authController.js
 ------------------------------------------------------------
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import e from "express";
 import jwt from "jsonwebtoken";
 
-// ================= REGISTER =================
 export const register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -2197,7 +2202,7 @@ export const register = async (req, res) => {
   const user = await User.create({
     name,
     email,
-    password, // ✅ RAW password ONLY
+    password, 
     role
   });
 
@@ -2211,7 +2216,6 @@ export const register = async (req, res) => {
   });
 };
 
-// ================= LOGIN =================
 export const login = async (req, res) => {
   try {
     console.log("LOGIN BODY:", req.body);
@@ -2259,6 +2263,14 @@ export const login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: "Not authorized as an admin" });
+  }
+};
+export default { register, login };
 
 ------------------------------------------------------------
 File: authMiddleware.js
@@ -2267,7 +2279,7 @@ Path: backend\src\middleware\authMiddleware.js
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Protect routes
+
 export const protect = async (req, res, next) => {
   let token;
 
@@ -2296,7 +2308,7 @@ export const protect = async (req, res, next) => {
   return res.status(401).json({ message: "Not authorized, no token" });
 };
 
-// Role-based access control
+
 export const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
@@ -2314,41 +2326,66 @@ export const isAdmin = (req, res, next) => {
     res.status(403).json({ message: "Access denied. Admins only." });
   }
 };
+export const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: "Not authorized as an admin" });
+  }
+};
 
 ------------------------------------------------------------
 File: Complaint.js
 Path: backend\src\models\Complaint.js
 ------------------------------------------------------------
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const complaintSchema = new mongoose.Schema({
-
-  title:{
-    type:String,
-    required:true
+  title: { 
+    type: String, 
+    required: true 
+  },
+  description: { 
+    type: String, 
+    required: true 
+  },
+  category: { 
+    type: String, 
+    required: true 
+  },
+  student: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User", 
+    required: true 
+  },
+  
+  
+  recipientRole: {
+    type: String,
+    enum: ["admin", "teacher"],
+    default: "admin",
+    required: true
   },
 
-  description:{
-    type:String,
-    required:true
+  assignedTeacher: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User", 
+    default: null 
   },
 
-  student:{
-    type:mongoose.Schema.Types.ObjectId,
-    ref:"User"
+  status: {
+    type: String,
+    enum: ["pending", "resolved", "rejected"],
+    default: "pending"
   },
 
-  status:{
-    type:String,
-    enum:["pending","resolved","rejected"],
-    default:"pending"
+  adminFeedback: { 
+    type: String, 
+    default: "" 
   }
+}, { timestamps: true });
 
-},{timestamps:true})
-
-const Complaint = mongoose.model("Complaint",complaintSchema)
-
-export default Complaint
+export default mongoose.model("Complaint", complaintSchema);
 
 ------------------------------------------------------------
 File: User.js
@@ -2381,18 +2418,19 @@ import {
   createComplaint,
   getMyComplaints,
   getAllComplaints,
+  getTeachersList,
   updateComplaintStatus
-} from "../controllers/ComplaintController.js" // Note: fixed the capitalization here too!
+} from "../controllers/ComplaintController.js" 
 import { protect } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// Apply 'protect' so req.user is populated!
+
 router.post("/", protect, createComplaint)
 router.get("/my", protect, getMyComplaints)
 router.get("/", protect, getAllComplaints)
 router.put("/:id", protect, updateComplaintStatus)
-
+router.get("/teachers", protect, getTeachersList);
 export default router
 
 ------------------------------------------------------------
@@ -2458,21 +2496,18 @@ import User from '../models/User.js';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
 import { 
   getAllUsers, 
-  getAdminStats, 
   adminCreateUser, 
   updateUserRole, 
   deleteUser 
 } from '../controllers/UserController.js';
+import { getStats } from "../controllers/UserController.js";
+import { admin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// --- ADMIN ROUTES (Protected) ---
-
-
-router.get("/", protect, isAdmin, getAllUsers);
-router.get("/stats", protect, isAdmin, getAdminStats);
-
 router.post("/admin/create-user", protect, isAdmin, adminCreateUser);
+router.get("/", protect, isAdmin, getAllUsers);
+router.get("/stats", protect, isAdmin, getStats);
 
 router.put("/:id/role", protect, isAdmin, updateUserRole);
 
@@ -2492,6 +2527,22 @@ router.post("/create", async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+export const getTeachers = async (req, res) => {
+  try {
+    const teachers = await User.find({ role: "teacher" }).select("name _id department");
+    res.json(teachers);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching teachers" });
+  }
+};
+
+router.get("/me", protect, async (req, res) => {
+  const user = await User.findById(req.user._id).select("-password");
+  res.json(user);
+});
+
+router.get("/stats", protect, admin, getStats);
 
 export default router;
 
@@ -2613,6 +2664,7 @@ Path: frontend\package-lock.json
       "dependencies": {
         "axios": "^1.13.2",
         "jwt-decode": "^4.0.0",
+        "lucide-react": "^0.577.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "react-router-dom": "^7.11.0"
@@ -5203,6 +5255,15 @@ Path: frontend\package-lock.json
         "yallist": "^3.0.2"
       }
     },
+    "node_modules/lucide-react": {
+      "version": "0.577.0",
+      "resolved": "https://registry.npmjs.org/lucide-react/-/lucide-react-0.577.0.tgz",
+      "integrity": "sha512-4LjoFv2eEPwYDPg/CUdBJQSDfPyzXCRrVW1X7jrx/trgxnxkHFjnVZINbzvzxjN70dxychOfg+FTYwBiS3pQ5A==",
+      "license": "ISC",
+      "peerDependencies": {
+        "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+      }
+    },
     "node_modules/math-intrinsics": {
       "version": "1.1.0",
       "resolved": "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz",
@@ -5885,6 +5946,7 @@ Path: frontend\package.json
   "dependencies": {
     "axios": "^1.13.2",
     "jwt-decode": "^4.0.0",
+    "lucide-react": "^0.577.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.11.0"
@@ -5965,20 +6027,20 @@ Path: frontend\src\App.css
 File: App.jsx
 Path: frontend\src\App.jsx
 ------------------------------------------------------------
-import { Routes, Route, Navigate } from "react-router-dom"; // Added Navigate
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import Registration from "./Pages/Registration";
 import Login from "./Pages/Login";
 import StudentLayout from "./layouts/StudentLayout";
-
+import HomePage from "./Pages/HomePage";
 import StudentDashboard from "./Pages/StudentDashboard";
 import StudentProfile from "./Pages/StudentProfile";
 import AddComplaint from "./Pages/AddComplaint";
 import StudentComplaints from "./Pages/StudentComplaints";
 
 import TeacherDashboard from "./Pages/TeacherDashboard";
-
+import Sidebar from "./components/Sidebar";
 import AdminDashboard from "./Pages/AdminDashboard";
-import AdminUsers from "./assets/AdminUsers";
+import AdminUsers from "./Pages/Admin/AdminUsers";
 import AdminComplaints from "./Pages/AdminComplaints";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -5986,13 +6048,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <Routes>
-      {/* FIX: Redirect root to login */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-
+      <Route path="/" element={<HomePage />} />
       <Route path="/register" element={<Registration />} />
       <Route path="/login" element={<Login />} />
 
-      {/* STUDENT ROUTES */}
+     
       <Route
         element={
           <ProtectedRoute allowedRoles={["student"]}>
@@ -6006,122 +6066,64 @@ function App() {
         <Route path="/student/complaints" element={<StudentComplaints />} />
       </Route>
 
-      {/* TEACHER ROUTE */}
-      <Route
-        path="/teacher"
-        element={
-          <ProtectedRoute allowedRoles={["teacher"]}>
-            <TeacherDashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ADMIN ROUTES */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
      
       <Route
-        path="/admin/complaints"
         element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminComplaints />
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <div style={{ display: "flex" }}>
+              <Sidebar role="teacher" />
+              <div style={{ flex: 1, padding: "20px" }}>
+                <Outlet />
+              </div>
+            </div>
           </ProtectedRoute>
         }
-        />
+      >
+        <Route path="/teacher" element={<TeacherDashboard />} />
+      </Route>
 
+    
       <Route
-        path="/admin/users"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminUsers />
+            <div style={{ display: "flex" }}>
+              <Sidebar role="admin" />
+              <div style={{ flex: 1, padding: "20px" }}>
+                <Outlet />
+              </div>
+            </div>
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/complaints" element={<AdminComplaints />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
-
 export default App;
 
 ------------------------------------------------------------
 File: index.css
 Path: frontend\src\index.css
 ------------------------------------------------------------
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  background-color: #f8fafc; /* Light gray background */
+  color: #1e293b; /* Dark slate text */
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  font-family: 'Inter', sans-serif;
 }
 
 ------------------------------------------------------------
@@ -6160,55 +6162,110 @@ export default axios.create({
 File: AddComplaint.jsx
 Path: frontend\src\Pages\AddComplaint.jsx
 ------------------------------------------------------------
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import API from "../API/axios";
+import "../Styles/StudentDashboard.css";
 
 const AddComplaint = () => {
-  const [formData, setFormData] = useState({ title: "", description: "", category: "General" });
-  const [message, setMessage] = useState("");
-  const navigate = useNavigate();
+  const [teachers, setTeachers] = useState([]);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    category: "Academic",
+    recipientRole: "admin",
+    assignedTeacher: ""
+  });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await API.get("/complaints/teachers", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setTeachers(res.data);
+      } catch (error) {
+        console.error("Error fetching teachers:", error);
+      }
+    };
+    fetchTeachers();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        setMessage("You must be logged in to submit a complaint.");
-        return;
-      }
-
       await API.post("/complaints", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setMessage("Complaint submitted successfully!");
-      // Redirect to dashboard so the student can see their new complaint
-      setTimeout(() => navigate("/student/dashboard"), 1500);
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Failed to submit complaint");
+      alert(`Complaint successfully sent to ${formData.recipientRole}`);
+      setFormData({ title: "", description: "", category: "Academic", recipientRole: "admin", assignedTeacher: "" });
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Submission failed.");
     }
   };
 
   return (
     <div className="add-complaint-container">
-      <h2>Submit a Complaint</h2>
-      {message && <p className="message">{message}</p>}
-      <form onSubmit={handleSubmit}>
-        <input name="title" placeholder="Title" onChange={handleChange} required />
-        <textarea name="description" placeholder="Description" onChange={handleChange} required />
-        <select name="category" onChange={handleChange}>
-          <option value="General">General</option>
-          <option value="Hostel">Hostel</option>
-          <option value="Academic">Academic</option>
-          <option value="Facilities">Facilities</option>
-        </select>
-        <button type="submit">Submit</button>
-      </form>
+      <div className="form-card">
+        <h2 className="title-dark">Submit a New Complaint</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Title</label>
+            <input 
+              type="text" 
+              className="input-field"
+              value={formData.title} 
+              onChange={(e) => setFormData({...formData, title: e.target.value})} 
+              required 
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Send To:</label>
+            <select 
+              className="input-field"
+              value={formData.recipientRole}
+              onChange={(e) => setFormData({...formData, recipientRole: e.target.value, assignedTeacher: ""})}
+            >
+              <option value="admin">Administrator</option>
+              <option value="teacher">Specific Teacher</option>
+            </select>
+          </div>
+
+          {formData.recipientRole === "teacher" && (
+            <div className="form-group">
+              <label>Select Teacher:</label>
+              <select 
+                className="input-field"
+                required
+                value={formData.assignedTeacher}
+                onChange={(e) => setFormData({...formData, assignedTeacher: e.target.value})}
+              >
+                <option value="">-- Choose a Teacher --</option>
+                {teachers.map((t) => (
+                  <option key={t._id} value={t._id}>
+                    {t.name} ({t.department || "Staff"})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label>Description</label>
+            <textarea 
+              className="input-field"
+              value={formData.description} 
+              onChange={(e) => setFormData({...formData, description: e.target.value})} 
+              required
+            ></textarea>
+          </div>
+
+          <button type="submit" className="submit-btn">Submit Complaint</button>
+        </form>
+      </div>
     </div>
   );
 };
@@ -6219,100 +6276,108 @@ export default AddComplaint;
 File: AdminComplaints.jsx
 Path: frontend\src\Pages\AdminComplaints.jsx
 ------------------------------------------------------------
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import API from "../API/axios";
-import "../Styles/AdminDashboard.css"; // Ensure you have admin styles
+import ComplaintModal from "../components/ComplaintModal";
+import "../Styles/AdminDashboard.css";
 
 export default function AdminComplaints() {
   const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const fetchComplaints = async () => {
+  const fetchComplaints = useCallback(async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
 
       const res = await API.get("/complaints", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       setComplaints(res.data);
-    } catch (err) {
-      console.error("Error fetching complaints:", err);
+    } catch (err) { 
+      console.error("Failed to fetch complaints:", err.message); 
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchComplaints();
   }, []);
 
-  const updateStatus = async (id, status) => {
+  useEffect(() => { 
+    fetchComplaints(); 
+  }, [fetchComplaints]); 
+
+  const updateStatus = async (id, status, feedback) => {
     try {
       const token = localStorage.getItem("token");
       await API.put(`/complaints/${id}`, 
-        { status }, 
+        { status, adminFeedback: feedback },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       
-      setComplaints(prev => 
-        prev.map(c => c._id === id ? { ...c, status: status } : c)
+      setComplaints((prev) =>
+        prev.map((c) => (c._id === id ? { ...c, status, adminFeedback: feedback } : c))
       );
-    } catch (err) {
-      alert("Failed to update status");
+      
+      setSelectedComplaint(null);
+    } catch (err) { 
+      console.error("Update error:", err.message);
+      alert("Failed to update status"); 
     }
   };
 
-  if (loading) return <div className="p-6">Loading Complaints...</div>;
-
   return (
-    <div className="admin-card p-6">
-      <h2 className="text-xl font-bold mb-4">Student Complaints Management</h2>
-      
-      <table className="min-w-full bg-white border">
+    <div className="admin-container">
+      <div className="admin-header">
+        <h2>All Student Complaints</h2>
+        {loading && <span className="loader">Refreshing...</span>}
+      </div>
+
+      <table className="complaint-table">
         <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-3 border">Student</th>
-            <th className="p-3 border">Title</th>
-            <th className="p-3 border">Status</th>
-            <th className="p-3 border">Actions</th>
+          <tr>
+            <th>Student</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {complaints.length === 0 ? (
-            <tr><td colSpan="4" className="p-4 text-center">No complaints found.</td></tr>
+          {complaints.length === 0 && !loading ? (
+            <tr><td colSpan="4" style={{ textAlign: 'center' }}>No complaints found.</td></tr>
           ) : (
-            complaints.map((c) => (
-              <tr key={c._id} className="hover:bg-gray-50">
-                <td className="p-3 border">{c.student?.name || "Unknown"}</td>
-                <td className="p-3 border">{c.title}</td>
-                <td className="p-3 border">
+            complaints.map(c => (
+              <tr key={c._id}>
+                <td>{c.student?.name || "Unknown"}</td>
+                <td>{c.title}</td>
+                <td>
                   <span className={`status-badge ${c.status.toLowerCase()}`}>
                     {c.status}
                   </span>
                 </td>
-                <td className="p-3 border">
-                  <div className="flex gap-2">
-                    <button 
-                      className="bg-green-500 text-white px-3 py-1 rounded text-sm"
-                      onClick={() => updateStatus(c._id, "resolved")}
-                    >
-                      Resolve
-                    </button>
-                    <button 
-                      className="bg-red-500 text-white px-3 py-1 rounded text-sm"
-                      onClick={() => updateStatus(c._id, "rejected")}
-                    >
-                      Reject
-                    </button>
-                  </div>
+                <td>
+                  <button 
+                    className="view-btn" 
+                    onClick={() => setSelectedComplaint(c)}
+                  >
+                    View & Action
+                  </button>
                 </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
+      {selectedComplaint && (
+        <ComplaintModal 
+          complaint={selectedComplaint} 
+          isAdmin={true} 
+          onClose={() => setSelectedComplaint(null)} 
+          onUpdateStatus={updateStatus} 
+        />
+      )}
     </div>
   );
 }
@@ -6322,7 +6387,6 @@ File: AdminDashboard.jsx
 Path: frontend\src\Pages\AdminDashboard.jsx
 ------------------------------------------------------------
 import React, { useEffect, useState } from "react";
-import AdminSidebar from "../components/AdminSidebar";
 import API from "../API/axios";
 import "../Styles/AdminDashboard.css";
 
@@ -6331,43 +6395,47 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const { data } = await API.get("/users/stats", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setStats(data);
-  } catch (err) {
-    console.error("Failed to fetch stats. Is the route defined in the backend?", err.message);
-  }
-};
+      try {
+        const token = localStorage.getItem("token");
+        const { data } = await API.get("/users/stats", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to fetch stats:", err.message);
+      }
+    };
     fetchStats();
   }, []);
 
   return (
-    <div className="admin-layout">
-      <AdminSidebar />
-      <main className="admin-content">
-        <h1>Admin Dashboard</h1>
-        <div className="stats-grid">
-          <div className="stat-card">
-            <h3>Total Students</h3>
-            <p>{stats.students?.toString().padStart(2, '0') || "00"}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Total Teachers</h3>
-            <p>{stats.teachers?.toString().padStart(2, '0') || "00"}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Total Reports</h3>
-            <p>{stats.reports?.toString().padStart(2, '0') || "00"}</p>
-          </div>
-          <div className="stat-card">
-            <h3>System Status</h3>
-            <p className="ok">Online</p>
-          </div>
+    
+    <div className="admin-main-section">
+      <div className="admin-top-bar">
+        <h1 className="main-title">Admin Dashboard</h1>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <p className="label">Total Students</p>
+          <p className="value">{stats.students?.toString().padStart(2, '0') || "00"}</p>
         </div>
-      </main>
+
+        <div className="stat-card">
+          <p className="label">Total Teachers</p>
+          <p className="value">{stats.teachers?.toString().padStart(2, '0') || "00"}</p>
+        </div>
+
+        <div className="stat-card">
+          <p className="label">Total Reports</p>
+          <p className="value">{stats.reports?.toString().padStart(2, '0') || "00"}</p>
+        </div>
+
+        <div className="stat-card">
+          <p className="label">System Status</p>
+          <p className="value" style={{ color: '#10b981' }}>Online</p>
+        </div>
+      </div>
     </div>
   );
 };
@@ -6375,11 +6443,99 @@ const AdminDashboard = () => {
 export default AdminDashboard;
 
 ------------------------------------------------------------
+File: HomePage.jsx
+Path: frontend\src\Pages\HomePage.jsx
+------------------------------------------------------------
+import React from 'react';
+import { Link } from 'react-router-dom';
+import "../Styles/HomePage.css";
+
+const features = [
+  {
+    title: 'Easy Reporting',
+    description: 'Submit complaints with just a few clicks. No more paper forms.'
+  },
+  {
+    title: 'Track Progress',
+    description: 'Monitor the status of your complaints in real-time.'
+  },
+  {
+    title: 'Analytics',
+    description: 'Admins get insights into complaint trends and resolution times.'
+  }
+];
+
+const userTypes = [
+  {
+    title: 'Students',
+    description: 'Submit complaints about campus facilities, academics, hostel, and more.'
+  },
+  {
+    title: 'Teachers',
+    description: 'Monitor complaints and escalate urgent issues to administration.'
+  },
+  {
+    title: 'Administrators',
+    description: 'Review, manage, and resolve complaints efficiently.'
+  }
+];
+
+export default function HomePage() {
+  return (
+    <div className="homepage-container">
+      <nav className="navbar">
+        <div className="nav-logo">CampusHub</div>
+        <div className="nav-buttons">
+          <Link to="/login" className="btn-secondary">Login</Link>
+          <Link to="/register" className="btn-primary">Get Started</Link>
+        </div>
+      </nav>
+
+      <header className="hero-section">
+        <h1>Campus Issues, <span className="highlight">Solved Faster</span></h1>
+        <p>A streamlined platform for students, teachers, and administrators to report and resolve campus complaints efficiently.</p>
+        <div className="hero-actions">
+          <Link to="/register" className="btn-primary-large">Start Reporting</Link>
+          <Link to="/login" className="btn-outline-large">Sign In</Link>
+        </div>
+      </header>
+
+      <section className="features-grid">
+        <h2>Why Use Campus Hub?</h2>
+        <div className="grid-container">
+          {features.map((feature, index) => (
+            <div key={index} className="feature-card">
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="roles-section">
+        <h2>For Everyone on Campus</h2>
+        <div className="grid-container">
+          {userTypes.map((type, index) => (
+            <div key={index} className="role-box">
+              <h3>{type.title}</h3>
+              <p>{type.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+      <footer className="footer">
+        <p> Smart Campus Complaint System</p>
+      </footer>
+    </div>
+  );
+}
+
+------------------------------------------------------------
 File: Login.jsx
 Path: frontend\src\Pages\Login.jsx
 ------------------------------------------------------------
 import "../Styles/Login.css";
-
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -6417,7 +6573,6 @@ const Login = () => {
       <div className="login-card">
         <form onSubmit={handleSubmit}>
           <h2>Login</h2>
-          <h3>Don't have an account? <a href="/register">Sign up</a></h3>
           <input
             type="email"
             placeholder="Email"
@@ -6435,6 +6590,9 @@ const Login = () => {
           />
 
           <button type="submit">Login</button>
+         <p className="signup-text">
+            Don't have an account? <Link to="/register">Sign up</Link>
+       </p>
         </form>
       </div>
     </div>
@@ -6521,7 +6679,6 @@ const StudentComplaints = () => {
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
 
-  // 1. Fetch Logic
   const fetchComplaints = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -6538,7 +6695,6 @@ const StudentComplaints = () => {
     fetchComplaints();
   }, []);
 
-  // 2. Filter & Search Logic
   const filtered = complaints
     .filter((c) => {
       const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase());
@@ -6546,7 +6702,6 @@ const StudentComplaints = () => {
       return matchesSearch && matchesStatus;
     });
 
-  // 3. Pagination Logic
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice(
     (page - 1) * itemsPerPage,
@@ -6565,7 +6720,7 @@ const StudentComplaints = () => {
             value={search}
             onChange={(e) => {
                 setSearch(e.target.value);
-                setPage(1); // Reset to page 1 on search
+                setPage(1); 
             }}
           />
 
@@ -6573,7 +6728,7 @@ const StudentComplaints = () => {
             className="border p-2 rounded"
             onChange={(e) => {
                 setFilter(e.target.value);
-                setPage(1); // Reset to page 1 on filter
+                setPage(1); 
             }}
           >
             <option value="all">All Statuses</option>
@@ -6617,7 +6772,6 @@ const StudentComplaints = () => {
         </tbody>
       </table>
 
-      {/* Pagination Controls */}
       {filtered.length > itemsPerPage && (
         <div className="pagination mt-4 flex justify-center items-center gap-4">
           <button 
@@ -6653,10 +6807,12 @@ Path: frontend\src\Pages\StudentDashboard.jsx
 ------------------------------------------------------------
 import React, { useEffect, useState } from "react";
 import API from "../API/axios";
+import ComplaintModal from "../components/ComplaintModal"; 
 import "../Styles/StudentDashboard.css";
 
 const StudentDashboard = () => {
   const [complaints, setComplaints] = useState([]);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -6666,10 +6822,7 @@ const StudentDashboard = () => {
   const fetchComplaints = async () => {
     try {
       const token = localStorage.getItem("token");
-      
-      // FIX: Stop the function if no token is found to avoid null errors
       if (!token) {
-        console.error("No authentication token found.");
         setLoading(false);
         return;
       }
@@ -6687,24 +6840,60 @@ const StudentDashboard = () => {
 
   return (
     <div className="student-dashboard">
-      <h1>My Complaints</h1>
+      <header className="dashboard-header">
+        <h1>My Complaints</h1>
+        <p className="subtitle">Track the status and view feedback for your submitted issues.</p>
+      </header>
+      
       {loading ? (
-        <p>Loading...</p>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading your complaints...</p>
+        </div>
       ) : complaints.length === 0 ? (
-        <p>You haven't submitted any complaints yet.</p>
+        <div className="empty-state">
+          <p>You haven't submitted any complaints yet.</p>
+        </div>
       ) : (
         <div className="complaint-grid">
           {complaints.map((c) => (
-            <div key={c._id} className="complaint-card">
-              <h3>{c.title}</h3>
-              <p><strong>Category:</strong> {c.category}</p>
-              <p>{c.description}</p>
-              <span className={`status ${c.status.toLowerCase()}`}>
-                Status: {c.status}
-              </span>
+            <div 
+              key={c._id} 
+              className="complaint-card" 
+              onClick={() => setSelectedComplaint(c)}
+            >
+              <div className="card-header">
+                <h3 className="complaint-title">{c.title}</h3>
+                <span className={`status-badge ${c.status.toLowerCase()}`}>
+                  {c.status}
+                </span>
+              </div>
+              
+              <div className="card-body">
+                <p className="category-info">
+                  <strong>Category:</strong> {c.category}
+                </p>
+                <p className="description-preview">
+                  {c.description?.length > 120 
+                    ? `${c.description.substring(0, 120)}...` 
+                    : c.description}
+                </p>
+              </div>
+
+              <div className="card-footer">
+                <button className="details-btn">View Details & Feedback</button>
+              </div>
             </div>
           ))}
         </div>
+      )}
+
+      {selectedComplaint && (
+        <ComplaintModal 
+          complaint={selectedComplaint} 
+          isAdmin={false} 
+          onClose={() => setSelectedComplaint(null)} 
+        />
       )}
     </div>
   );
@@ -6716,35 +6905,62 @@ export default StudentDashboard;
 File: StudentProfile.jsx
 Path: frontend\src\Pages\StudentProfile.jsx
 ------------------------------------------------------------
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import API from "../API/axios";
+import "../Styles/StudentDashboard.css";
 
 const StudentProfile = () => {
-  const [student, setStudent] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get("http://localhost:7000/api/student/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setStudent(res.data);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await API.get("/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setProfile(res.data);
+      } catch (error) {
+        console.error("Profile Fetch Error:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-
     fetchProfile();
   }, []);
 
-  if (!student) return <p>Loading...</p>;
+  if (loading) return <div className="loading-state">Loading your profile...</div>;
+  if (!profile) return <div className="empty-state">User profile not found.</div>;
 
   return (
-    <div>
-      <h1>My Profile</h1>
-      <p><strong>Name:</strong> {student.name}</p>
-      <p><strong>Email:</strong> {student.email}</p>
-      <p><strong>Department:</strong> {student.department}</p>
-      <p><strong>Role:</strong> {student.role}</p>
+    <div className="profile-page-wrapper">
+      <div className="profile-card">
+        <div className="profile-header">
+          <div className="profile-avatar">
+            {profile.name.charAt(0).toUpperCase()}
+          </div>
+          <h2 className="profile-name">{profile.name}</h2>
+          <span className="profile-role-badge">{profile.role}</span>
+        </div>
+
+        <div className="profile-details-grid">
+          <div className="detail-group">
+            <label>Full Name</label>
+            <p>{profile.name}</p>
+          </div>
+          
+          <div className="detail-group">
+            <label>Email Address</label>
+            <p>{profile.email}</p>
+          </div>
+
+          <div className="detail-group">
+            <label>Account Status</label>
+            <p className="status-active">Verified Student</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -6755,98 +6971,135 @@ export default StudentProfile;
 File: TeacherDashboard.jsx
 Path: frontend\src\Pages\TeacherDashboard.jsx
 ------------------------------------------------------------
-import { useEffect, useState } from "react"
-import API from "../API/axios"
-import TeacherSidebar from "../components/TeacherSidebar"
+import { useEffect, useState, useCallback } from "react";
+import API from "../API/axios";
+import ComplaintModal from "../components/ComplaintModal";
+import "../Styles/AdminDashboard.css"; 
 
-export default function TeacherDashboard(){
+export default function TeacherDashboard() {
+  const [complaints, setComplaints] = useState([]);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-const [complaints,setComplaints] = useState([])
+  
+  const fetchComplaints = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-useEffect(()=>{
-
-  const fetchComplaints = async ()=>{
-
-    try{
-
-      const token = localStorage.getItem("token")
-
-      const res = await API.get("/complaints",{
-        headers:{
-          Authorization:`Bearer ${token}`
-        }
-      })
-
-      setComplaints(res.data)
-
-    }catch(err){
-      console.error(err)
+      const res = await API.get("/complaints", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setComplaints(res.data);
+    } catch (err) {
+      console.error("Teacher Panel Fetch Error:", err.message);
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-  }
+  useEffect(() => {
+    fetchComplaints();
+  }, [fetchComplaints]);
 
-  fetchComplaints()
+  const updateStatus = async (id, status, feedback) => {
+    try {
+      const token = localStorage.getItem("token");
+      await API.put(`/complaints/${id}`, 
+        { status, adminFeedback: feedback },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
 
-},[])
+      setComplaints((prev) =>
+        prev.map((c) => (c._id === id ? { ...c, status, adminFeedback: feedback } : c))
+      );
+      
+      setSelectedComplaint(null);
+    } catch (err) {
+      console.error("Teacher Update Error:", err.message);
+      alert("Failed to update status");
+    }
+  };
 
-return(
+  return (
+    <div className="admin-container">
+      <div className="admin-header">
+        <h2>Teacher Dashboard: Student Complaints</h2>
+        {loading && <span className="loader">Updating list...</span>}
+      </div>
 
-<div className="dashboard-layout">
+      <table className="complaint-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {complaints.length === 0 && !loading ? (
+            <tr><td colSpan="5" className="text-center">No complaints available.</td></tr>
+          ) : (
+            complaints.map(c => (
+              <tr key={c._id}>
+                <td>{c.student?.name || "Unknown"}</td>
+                <td>{c.title}</td>
+                <td>{c.category}</td>
+                <td>
+                  <span className={`status-badge ${c.status.toLowerCase()}`}>
+                    {c.status}
+                  </span>
+                </td>
+                <td>
+                  <button 
+                    className="view-btn" 
+                    onClick={() => setSelectedComplaint(c)}
+                  >
+                    View & Respond
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
 
-<TeacherSidebar/>
-
-<div className="dashboard-content">
-
-<h2>Teacher Complaints</h2>
-
-<table>
-
-<thead>
-<tr>
-<th>Student</th>
-<th>Title</th>
-<th>Status</th>
-</tr>
-</thead>
-
-<tbody>
-
-{complaints.map(c => (
-
-<tr key={c._id}>
-<td>{c.student?.name}</td>
-<td>{c.title}</td>
-<td>{c.status}</td>
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-)
-
+      {selectedComplaint && (
+        <ComplaintModal 
+          complaint={selectedComplaint} 
+          isAdmin={true}
+          onClose={() => setSelectedComplaint(null)} 
+          onUpdateStatus={updateStatus} 
+        />
+      )}
+    </div>
+  );
 }
 
 ------------------------------------------------------------
 File: AdminUsers.jsx
 Path: frontend\src\Pages\Admin\AdminUsers.jsx
 ------------------------------------------------------------
-import React, { useState, useEffect } from "react";
-import AdminSidebar from "../../components/AdminSidebar";
-import CreateUser from "./CreateUser";
-import API from "../../API/axios"; // Ensure this matches your path
+import React, { useState, useEffect, useCallback } from "react";
+import API from "../../API/axios";
+import "../../Styles/AdminDashboard.css"; 
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newUserData, setNewUserData] = useState({ 
+    name: "", 
+    email: "", 
+    password: "", 
+    role: "student",
+    department: "General" 
+  });
 
-  const fetchUsers = async () => {
+  const loadData = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const { data } = await API.get("/users", {
@@ -6854,100 +7107,117 @@ const AdminUsers = () => {
       });
       setUsers(data);
     } catch (err) {
-      console.error("Failed to fetch users", err);
+      console.error("Fetch error:", err);
     }
-  };
-
-  useEffect(() => {
-    fetchUsers();
   }, []);
 
-  // --- ADD THESE FUNCTIONS HERE ---
+  useEffect(() => {
+    loadData();
+  }, [loadData]); 
 
+const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      
+      
+      await API.post("/users/admin/create-user", newUserData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert("User Created Successfully!");
+      setShowCreateForm(false);
+      setNewUserData({ name: "", email: "", password: "", role: "student" });
+      loadData(); 
+    } catch (error) {
+      console.error("Creation failed:", error.response?.data || error.message);
+      alert("Creation failed. Please check the console.");
+    }
+  };
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+    if (window.confirm("Delete this user?")) {
       try {
         const token = localStorage.getItem("token");
-        await API.delete(`/users/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        await API.delete(`/users/${id}`, { 
+          headers: { Authorization: `Bearer ${token}` } 
         });
-        fetchUsers(); // Refresh the list after deletion
+        loadData();
       } catch (err) {
-        alert(err.response?.data?.message || "Delete failed");
+        console.error("Delete error:", err);
       }
     }
   };
 
-  const handleRoleChange = async (id, newRole) => {
-    try {
-      const token = localStorage.getItem("token");
-      await API.put(`/users/${id}/role`, { role: newRole }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchUsers(); // Refresh the list after update
-    } catch (err) {
-      alert("Role update failed");
-    }
-  };
-
-  // --- END OF NEW FUNCTIONS ---
-
   return (
-    <div className="admin-layout">
-      <AdminSidebar />
-      <main className="admin-content p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <button 
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            {showCreateForm ? "Close Form" : "+ Create New User"}
-          </button>
+    <div className="admin-main-section">
+      <div className="admin-top-bar">
+        <h1 className="main-title">User Management</h1>
+        <button className="add-user-btn" onClick={() => setShowCreateForm(!showCreateForm)}>
+          {showCreateForm ? "Cancel" : "+ New User"}
+        </button>
+      </div>
+
+      {showCreateForm && (
+        <div className="form-container-box">
+          <form onSubmit={handleCreateUser} className="inline-create-form">
+            <input 
+              type="text" 
+              placeholder="Full Name" 
+              required 
+              value={newUserData.name}
+              onChange={(e) => setNewUserData({...newUserData, name: e.target.value})} 
+            />
+            <input 
+              type="email" 
+              placeholder="Email Address" 
+              required 
+              value={newUserData.email}
+              onChange={(e) => setNewUserData({...newUserData, email: e.target.value})} 
+            />
+            <input 
+              type="password" 
+              placeholder="Password" 
+              required 
+              value={newUserData.password}
+              onChange={(e) => setNewUserData({...newUserData, password: e.target.value})} 
+            />
+            <select 
+              value={newUserData.role}
+              onChange={(e) => setNewUserData({...newUserData, role: e.target.value})}
+            >
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button type="submit" className="submit-btn">Save User</button>
+          </form>
         </div>
+      )}
 
-        {showCreateForm && (
-          <div className="mb-8 bg-gray-50 p-4 rounded-lg border">
-            <CreateUser onSuccess={() => { setShowCreateForm(false); fetchUsers(); }} />
-          </div>
-        )}
-
-        <table className="w-full text-left bg-white shadow rounded">
+      <div className="table-overflow-container">
+        <table className="custom-admin-table">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="p-4">Name</th>
-              <th className="p-4">Role</th>
-              <th className="p-4">Actions</th>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.map(user => (
-              <tr key={user._id} className="border-t">
-                <td className="p-4">{user.name}</td>
-                <td className="p-4">
-                  <select 
-                    value={user.role} 
-                    onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                    className="border p-1 rounded"
-                  >
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </td>
-                <td className="p-4">
-                  <button 
-                    onClick={() => handleDelete(user._id)} 
-                    className="text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
+            {users.map((user) => (
+              <tr key={user._id}>
+                <td className="force-visible">{user.name}</td>
+                <td className="force-visible">{user.email}</td>
+                <td className="force-visible" style={{ textTransform: 'capitalize' }}>{user.role}</td>
+                <td>
+                  <button className="row-delete-btn" onClick={() => handleDelete(user._id)}>Delete</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </main>
+      </div>
     </div>
   );
 };
@@ -6958,312 +7228,277 @@ export default AdminUsers;
 File: AdminDashboard.css
 Path: frontend\src\Styles\AdminDashboard.css
 ------------------------------------------------------------
-
-.admin-dashboard {
-  min-height: 100vh;
-  padding: 30px;
-  background: #f3f5f5; 
-  color: #a1b0ce;
-  font-family: "Inter", Arial, sans-serif;
+:root {
+  --bg-main: #f8fafc;
+  --sidebar-bg: #0f172a;
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --sky-blue: #38bdf8;
+  --text-dark: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-blue: #bfdbfe;
+  --white: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-.admin-content h1 {
-  font-size: 38px;
-  font-weight: 600;
-  margin-bottom: 30px;
-  color: #f7f9fa;
-  padding-left: 100px;
-
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  overflow-x: hidden;
+}
+
+.admin-page-wrapper {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+.sidebar-container {
+  width: 260px;
+  height: 100vh;
+  background-color: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  padding: 30px 20px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+}
+
+.admin-main-section {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  background-color: var(--bg-main);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-top-bar {
+  width: 69%;
+  padding: 3rem 0 1.5rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.main-title {
+  color: var(--text-dark);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+/* --- DASHBOARD STAT CARDS HOVER EFFECTS --- */
 .stats-grid {
+  width: 69%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .stat-card {
-  background: #393a3a;
-  padding: 20px;
+  background: var(--white);
+  padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 35px rgba(92, 90, 90, 0.6);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--sky-blue);
 }
 
-.stat-card h3 {
-  font-size: 19px;
-  font-weight: 500;
-  color: #f4f5f7;
-  margin-bottom: 10px;
-}
-
-.stat-card p {
-  font-size: 26px;
+.stat-card p:first-child {
+  color: var(--text-muted);
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
 }
 
-.stat-card .ok {
-  color: #22c55e;
+.stat-card p:last-child {
+  color: var(--primary);
+  font-size: 2rem;
+  font-weight: 800;
 }
 
-.table-card {
-  background: #0baff0;
-  padding: 25px;
-  border-radius: 14px;
-  box-shadow: 0 10px 25px rgba(224, 222, 222, 0.45);
+/* --- ARRANGED CREATE NEW USER FORM --- */
+.form-container-box {
+  width: 69%;
+  padding: 2rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 2.5rem;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
 }
 
-.table-card h2 {
-  margin-bottom: 20px;
-  font-size: 20px;
-  font-weight: 600;
-  color: #e5e7eb;
+.form-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead {
-  background: #2c8bf8;
-}
-
-th {
-  text-align: left;
-  font-size: 13px;
-  font-weight: 600;
-  color: #94a3b8;
-  padding: 14px 12px;
-  border-bottom: 1px solid #729ee6;
-}
-
-td {
-  padding: 14px 12px;
-  font-size: 14px;
-  color: #e5e7eb;
-  border-bottom: 1px solid #1e293b;
-}
-
-tbody tr:hover {
-  background: rgba(13, 157, 219, 0.06);
-}
-
-.active {
-  color: #22c55e;
-  font-weight: 600;
-}
-
-.inactive {
-  color: #ef4444;
-  font-weight: 600;
-}
-
-@media (max-width: 768px) {
-  .admin-dashboard {
-    padding: 20px;
-  }
-
-  .stat-card p {
-    font-size: 22px;
-  }
-
-  th,
-  td {
-    font-size: 13px;
-  }
-}
-.admin-layout {
-  display: flex;
-}
-
-.admin-content {
-  flex: 1;
-  padding: 30px;
-  background: #647191;
-  min-height: 100vh;
-}
-.admin-container {
-  display: flex;
-  min-height: 100vh;
-  background: #f4f6f9;
-  font-family: "Segoe UI", sans-serif;
-}
-
-.admin-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.admin-navbar {
-  height: 60px;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-.admin-navbar span {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.logout-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.logout-btn:hover {
-  background: #dc2626;
-}
-
-.admin-content {
-  padding: 20px;
-}
-
-.stats-grid {
+.inline-create-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(3, 1fr) auto; /* 3 inputs then the button */
+  gap: 1.25rem;
+  align-items: flex-end;
 }
 
-.stat-card {
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.inline-create-form input, 
+.inline-create-form select {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  width: 100%;
+  transition: border-color 0.2s;
+  background: #fdfdfd;
+}
+
+.inline-create-form input:focus {
+  outline: none;
+  border-color: var(--primary);
   background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-.stat-card h3 {
-  font-size: 14px;
-  color: #6b7280;
+/* --- TABLE STYLING --- */
+.table-overflow-container {
+  width: 69%;
+  background: var(--white);
+  border: 1px solid var(--border-blue);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  overflow-x: auto;
+  margin-bottom: 4rem;
 }
 
-.stat-card p {
-  font-size: 26px;
-  font-weight: bold;
-  margin-top: 8px;
-}
-
-.ok {
-  color: #16a34a;
-}
-
-.table-card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-}
-
-table {
+.custom-admin-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
 }
 
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
+.custom-admin-table th {
+  background-color: var(--primary-light); 
+  color: #1e40af; 
   text-align: left;
-}
-
-th {
-  background: #f9fafb;
-  font-size: 14px;
-}
-
-.active {
-  color: #16a34a;
-  font-weight: 600;
-}
-
-.inactive {
-  color: #dc2626;
-  font-weight: 600;
-}
-
-------------------------------------------------------------
-File: AdminSidebar.css
-Path: frontend\src\Styles\AdminSidebar.css
-------------------------------------------------------------
-.admin-sidebar {
-  width: 260px;
-  min-height: 100vh;
-  background: #293235;
-  color: #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-}
-
-.sidebar-header {
-  margin-bottom: 40px;
-}
-
-.sidebar-header h2 {
-  font-size: 22px;
+  padding: 1.25rem; 
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #0aacf1;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border-blue);
 }
 
-.sidebar-header span {
-  font-size: 19px;
-  color: #1662ce;
+.custom-admin-table td {
+  padding: 1.25rem; 
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.sidebar-nav {
+.custom-admin-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* --- SIDEBAR COMPONENTS --- */
+.sidebar-header-top {
+  margin-bottom: 50px;
+}
+
+.sidebar-header-top h2 {
+  color: var(--sky-blue);
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sidebar-links-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.sidebar-nav a {
-  padding: 18px 19px;
-  border-radius: 8px;
-  color: #f6f6f7;
+.sidebar-link-item {
+  color: #94a3b8;
   text-decoration: none;
-  font-size: 15px;
-  transition: background 0.2s ease, color 0.2s ease;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: 0.2s;
 }
 
-.sidebar-nav a:hover {
-  background: rgba(56, 189, 248, 0.12);
-  color: #0ef8f8;
-}
-
-.sidebar-nav a.active {
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
+.sidebar-link-item.active {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--sky-blue);
   font-weight: 600;
 }
 
-.logout-btn {
-  margin-top: auto;
-  padding: 12px;
-  background: #ef4444;
-  border: none;
-  border-radius: 8px;
+/* --- BUTTONS --- */
+.add-user-btn, .submit-btn {
+  background: var(--primary);
   color: white;
-  font-size: 14px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  border: none;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.logout-btn:hover {
-  background: #f80606;
+.add-user-btn:hover, .submit-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.badge {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-urgent { background: #fee2e2; color: #991b1b; }
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-resolved { background: #dcfce7; color: #166534; }
+
+.force-visible {
+  color: var(--text-dark) !important;
+  font-weight: 500;
 }
 
 ------------------------------------------------------------
@@ -7275,7 +7510,7 @@ Path: frontend\src\Styles\Auth.css
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgb(100, 191, 243);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -7412,7 +7647,7 @@ Path: frontend\src\Styles\Dashboard.css
 .dashboard-content{
   flex:1;
   padding:30px;
-  background:#6464b1;
+  background:#4ab0eb;
   overflow:auto;
 }
 
@@ -7483,6 +7718,127 @@ table td{
 .badge.rejected{
   background:#f8d7da;
   color:#721c24;
+}
+
+
+------------------------------------------------------------
+File: HomePage.css
+Path: frontend\src\Styles\HomePage.css
+------------------------------------------------------------
+.homepage-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 10%;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+/* Hero Section */
+.hero-section {
+  text-align: center;
+  padding: 100px 10%;
+  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+}
+
+.hero-section h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.highlight {
+  color: #2563eb;
+}
+
+.hero-section p {
+  font-size: 20px;
+  color: #666;
+  max-width: 800px;
+  margin: 0 auto 40px;
+}
+
+/* Grids */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  padding: 40px 10%;
+}
+
+.feature-card, .role-box {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+  text-align: center;
+}
+
+h2 {
+  text-align: center;
+  margin-top: 60px;
+  font-size: 32px;
+}
+
+/* Buttons (Matching your previous theme) */
+.btn-primary, .btn-primary-large {
+  background: #2563eb;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.btn-primary-large {
+  padding: 15px 30px;
+  font-size: 18px;
+}
+
+.btn-secondary {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.btn-outline-large {
+  border: 2px solid #2563eb;
+  color: #2563eb;
+  padding: 13px 30px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px;
+  border-top: 1px solid #eee;
+  margin-top: 60px;
+  color: #999;
 }
 
 ------------------------------------------------------------
@@ -7560,12 +7916,213 @@ body {
 .login-card button:hover {
   background: #203a43;
 }
+.signup-text {
+  text-align: center;
+  margin-top: 25px;
+  padding-top: 20px;
+  font-size: 0.9rem;
+  color: #64748b; 
+  border-top: 1px solid #e2e8f0; 
+}
+
+.signup-text a {
+  color: #2c5364; 
+  text-decoration: none;
+  font-weight: 700;
+  margin-left: 5px;
+  transition: all 0.2s ease;
+}
+
+.signup-text a:hover {
+  color: #38bdf8; 
+  text-decoration: underline;
+}
 
 ------------------------------------------------------------
 File: Modal.css
 Path: frontend\src\Styles\Modal.css
 ------------------------------------------------------------
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
 
+.modal-content {
+  background: white;
+  width: 90%;
+  max-width: 550px;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  position: relative;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.close-btn {
+  background: none; border: none; font-size: 28px; cursor: pointer; color: #999;
+}
+
+.info-grid {
+  display: flex; gap: 20px; margin-bottom: 20px;
+}
+
+.description-box {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.text-content { color: #444; line-height: 1.5; margin-top: 5px; }
+
+.feedback-section textarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: none;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-resolve { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; flex: 1; }
+.btn-reject { background: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; flex: 1; }
+
+.status-badge {
+  padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase;
+}
+.status-badge.pending { background: #fff3cd; color: #856404; }
+.status-badge.resolved { background: #d4edda; color: #155724; }
+.status-badge.rejected { background: #f8d7da; color: #721c24; }
+
+------------------------------------------------------------
+File: Sidebar.css
+Path: frontend\src\Styles\Sidebar.css
+------------------------------------------------------------
+:root {
+  --bg-main: #f8fafc;
+  --sidebar-bg: #0f172a;
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --sky-blue: #38bdf8;
+  --text-dark: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-blue: #bfdbfe;
+  --white: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-page-wrapper {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+.sidebar-container {
+  width: 260px;
+  height: 100vh;
+  background-color: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  
+  padding: 30px 16px 15px 16px; 
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+}
+
+.sidebar-top-content {
+  flex: 1;
+}
+
+.sidebar-header-top {
+  margin-bottom: 40px;
+  padding-left: 12px;
+}
+
+.sidebar-header-top h2 {
+  color: #38bdf8;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sidebar-links-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-link-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  text-decoration: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.sidebar-link-item.active {
+  background: rgba(56, 189, 248, 0.15);
+  color: #ffffff;
+  box-shadow: inset 4px 0 0 #38bdf8;
+}
+
+
+.sidebar-logout-btn {
+  margin-top: auto; 
+  margin-bottom: 1cm;  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.sidebar-logout-btn:hover {
+  background: #ef4444;
+  color: white;
+}
 
 ------------------------------------------------------------
 File: StudentDashboard.css
@@ -7573,190 +8130,384 @@ Path: frontend\src\Styles\StudentDashboard.css
 ------------------------------------------------------------
 .student-dashboard {
   padding: 30px;
+  background-color: #f4f7f9;
   min-height: 100vh;
-  background: #e2e9f3;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
-.student-dashboard h1 {
-  margin-bottom: 25px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+.dashboard-header {
   margin-bottom: 30px;
 }
 
-.stat-card {
-  background: rgb(102, 60, 60);
+.dashboard-header h1 {
+  color: #1a202c;
+  margin: 0;
+  font-size: 2rem;
+}
+
+.subtitle {
+  color: #d6d9dd;
+  margin-top: 5px;
+}
+
+
+.complaint-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.complaint-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.stat-card h3 {
-  font-size: 14px;
-  margin-bottom: 8px;
-  color: #dadee6;
-}
-
-.stat-card p {
-  font-size: 26px;
-  font-weight: bold;
-}
-
-.pending p {
-  color: #f59e0b;
-}
-
-.resolved p {
-  color: #16a34a;
-}
-
-.rejected p {
-  color: #dc2626;
-}
-
-.complaints-card {
-  background: rgb(82, 55, 235);
-  padding: 20px;
-  border-radius: 10px;
-}
-
-.complaints-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
- 
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
 
-select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #dad2d2;
+.complaint-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e0;
 }
 
-table {
+
+.complaint-title {
+  color: #2d3748 !important; 
+  font-size: 1.25rem;
+  margin: 0;
+  flex: 1;
+}
+
+.category-info {
+  color: #4a5568;
+  font-size: 0.9rem;
+  margin: 12px 0;
+}
+
+.category-info strong {
+  color: #2d3748;
+}
+
+.description-preview {
+  color: #4a5568 !important; 
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-badge.pending { background: #fffaf0; color: #9c4221; border: 1px solid #feebc8; }
+.status-badge.resolved { background: #f0fff4; color: #22543d; border: 1px solid #c6f6d5; }
+.status-badge.rejected { background: #fff5f5; color: #822727; border: 1px solid #fed7d7; }
+
+
+.details-btn {
+  margin-top: 20px;
   width: 100%;
-  border-collapse: collapse;
+  padding: 10px;
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-th, td {
+.details-btn:hover {
+  background-color: #2b6cb0;
+}
+
+
+.loading-container, .empty-state {
+  text-align: center;
+  padding: 100px 0;
+  color: #718096;
+}
+
+.profile-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.profile-card {
+  background: white;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #edf2f7;
+  padding-bottom: 20px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  background: #3182ce;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+}
+
+.profile-name {
+  color: #1a202c !important; 
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 12px;
+  background: #ebf8ff;
+  color: #2b6cb0;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.detail-group {
+  margin-bottom: 20px;
+}
+
+.detail-group label {
+  display: block;
+  color: #718096;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.detail-group p {
+  color: #2d3748 !important; 
+  font-size: 1.1rem;
+  margin: 0;
+  padding: 10px;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+.add-complaint-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.form-card {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2d3748;
+}
+
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
   padding: 12px;
-  border-bottom: 1px solid #1856d3;
-  text-align: left;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #2d3748; 
+  background-color: #fff;
 }
 
-.pending {
-  color: #f59e0b;
+.form-group textarea {
+  height: 120px;
+  resize: vertical;
+}
+
+.submit-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.student-sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  padding: 20px; 
+  position: fixed;
+}
+
+.sidebar-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #3b82f6;
+  margin-bottom: 40px; 
+  align-self: flex-start; 
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+
+
+.profile-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 60px 20px;
+  background-color: #f8fafc; 
+  min-height: 100vh;
+}
+
+
+.profile-card {
+  background: white;
+  width: 100%;
+  max-width: 550px;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.profile-name {
+  color: #0f172a;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 4px 16px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border: 1px solid #dbeafe;
+}
+
+
+.profile-details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.detail-group label {
+  display: block;
+  color: #64748b; 
+  font-size: 0.85rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 8px;
 }
 
-.resolved {
-  color: #16a34a;
+.detail-group p {
+  color: #1e293b !important;
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin: 0;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  transition: border-color 0.2s;
+}
+
+.detail-group p:hover {
+  border-color: #cbd5e0;
+}
+
+.status-active {
+  color: #059669 !important; 
+  font-weight: 700 !important;
+}
+
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
   font-weight: 600;
-}
-
-.rejected {
-  color: #dc2626;
-  font-weight: 600;
-}
-  
-
-------------------------------------------------------------
-File: AdminUsers.jsx
-Path: frontend\src\assets\AdminUsers.jsx
-------------------------------------------------------------
-import {useEffect,useState} from "react"
-import API from "../API/axios"
-
-export default function AdminUsers(){
-
-const [users,setUsers] = useState([])
-
-useEffect(()=>{
-fetchUsers()
-},[])
-
-const fetchUsers = async()=>{
-
-const token = localStorage.getItem("token")
-
-const res = await API.get("/users",{
-headers:{Authorization:`Bearer ${token}`}
-})
-
-setUsers(res.data)
-
-}
-
-const deleteUser = async(id)=>{
-
-const token = localStorage.getItem("token")
-
-await API.delete(`/users/${id}`,{
-headers:{Authorization:`Bearer ${token}`}
-})
-
-fetchUsers()
-
-}
-
-return(
-
-<div className="card">
-
-<h2>Users</h2>
-
-<table>
-
-<thead>
-
-<tr>
-<th>Name</th>
-<th>Email</th>
-<th>Role</th>
-<th>Action</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{users.map(u=>(
-
-<tr key={u._id}>
-
-<td>{u.name}</td>
-
-<td>{u.email}</td>
-
-<td>{u.role}</td>
-
-<td>
-
-<button
-onClick={()=>deleteUser(u._id)}
->
-Delete
-</button>
-
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-</div>
-
-)
-
+  color: #64748b;
 }
 
 ------------------------------------------------------------
@@ -7806,7 +8557,74 @@ export default function AdminSidebar(){
 File: ComplaintModal.jsx
 Path: frontend\src\components\ComplaintModal.jsx
 ------------------------------------------------------------
+import React, { useState } from 'react';
+import "../Styles/Modal.css";
 
+const ComplaintModal = ({ complaint, onClose, onUpdateStatus, isAdmin }) => {
+  const [feedback, setFeedback] = useState(complaint.adminFeedback || "");
+
+  if (!complaint) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{complaint.title}</h2>
+          <button className="close-btn" onClick={onClose}>&times;</button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="info-grid">
+            <p><strong>Category:</strong> {complaint.category}</p>
+            <p><strong>Status:</strong> 
+              <span className={`status-badge ${complaint.status.toLowerCase()}`}>
+                {complaint.status}
+              </span>
+            </p>
+          </div>
+          
+          <div className="description-box">
+            <p><strong>Description:</strong></p>
+            <p className="text-content">{complaint.description}</p>
+          </div>
+
+          <div className="feedback-section">
+            <p><strong>Admin Feedback:</strong></p>
+            {isAdmin ? (
+              <>
+                <textarea 
+                  value={feedback} 
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Explain the reason for rejection or resolution steps..."
+                />
+                <div className="modal-actions">
+                  <button 
+                    className="btn-resolve" 
+                    onClick={() => onUpdateStatus(complaint._id, "resolved", feedback)}
+                  >
+                    Resolve with Feedback
+                  </button>
+                  <button 
+                    className="btn-reject" 
+                    onClick={() => onUpdateStatus(complaint._id, "rejected", feedback)}
+                  >
+                    Reject with Feedback
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="feedback-text">
+                {complaint.adminFeedback || "No feedback provided yet."}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ComplaintModal;
 
 ------------------------------------------------------------
 File: ProtectedRoute.jsx
@@ -7830,6 +8648,66 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
 };
 
 export default ProtectedRoute;
+
+------------------------------------------------------------
+File: Sidebar.jsx
+Path: frontend\src\components\Sidebar.jsx
+------------------------------------------------------------
+import { NavLink, useNavigate } from "react-router-dom";
+import { LayoutDashboard, ClipboardList, Users, LogOut, ShieldCheck } from "lucide-react";
+
+const Sidebar = ({ role }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  return (
+    <div className="sidebar-container">
+      <div className="sidebar-top-content">
+        <div className="sidebar-header-top">
+          <h2>CAMPUS PORTAL</h2>
+        </div>
+
+        <nav className="sidebar-links-group">
+          {role === "teacher" && (
+            <NavLink to="/teacher" className={({ isActive }) => isActive ? "sidebar-link-item active" : "sidebar-link-item"}>
+              <ClipboardList size={20} />
+              <span>All Complaints</span>
+            </NavLink>
+          )}
+
+          {role === "admin" && (
+            <>
+              <NavLink to="/admin" end className={({ isActive }) => isActive ? "sidebar-link-item active" : "sidebar-link-item"}>
+                <LayoutDashboard size={20} />
+                <span>Overview</span>
+              </NavLink>
+              
+              <NavLink to="/admin/complaints" className={({ isActive }) => isActive ? "sidebar-link-item active" : "sidebar-link-item"}>
+                <ShieldCheck size={20} />
+                <span>Complaints</span>
+              </NavLink>
+              
+              <NavLink to="/admin/users" className={({ isActive }) => isActive ? "sidebar-link-item active" : "sidebar-link-item"}>
+                <Users size={20} />
+                <span>Users</span>
+              </NavLink>
+            </>
+          )}
+        </nav>
+      </div>
+      <button onClick={handleLogout} className="sidebar-logout-btn">
+        <LogOut size={18} />
+        <span>Logout</span>
+      </button>
+    </div>
+  );
+};
+
+export default Sidebar;
 
 ------------------------------------------------------------
 File: StudentSidebar.jsx
@@ -7866,7 +8744,7 @@ export default function StudentSidebar(){
         <NavLink to="/student/complaints">
           My Complaints
         </NavLink>
-
+         <NavLink to="/student/profile">View Profile</NavLink>
         <button onClick={logout}>
           Logout
         </button>
@@ -7913,7 +8791,6 @@ File: AdminLayout.jsx
 Path: frontend\src\layouts\AdminLayout.jsx
 ------------------------------------------------------------
 import AdminSidebar from "../components/AdminSidebar";
-import AdminNavbar from "../components/AdminNavbar";
 import AdminDashboard from "../Pages/AdminDashboard";
 
 const AdminLayout = ({ children }) => {
@@ -7922,7 +8799,6 @@ const AdminLayout = ({ children }) => {
       <AdminSidebar />
 
       <div className="admin-main">
-        <AdminNavbar />
         <div className="admin-content">{children}</div>
       </div>
     </div>

@@ -35,7 +35,6 @@ const userTypes = [
 export default function HomePage() {
   return (
     <div className="homepage-container">
-      {/* Navigation */}
       <nav className="navbar">
         <div className="nav-logo">CampusHub</div>
         <div className="nav-buttons">
@@ -44,7 +43,6 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <header className="hero-section">
         <h1>Campus Issues, <span className="highlight">Solved Faster</span></h1>
         <p>A streamlined platform for students, teachers, and administrators to report and resolve campus complaints efficiently.</p>
@@ -54,7 +52,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Features Section */}
       <section className="features-grid">
         <h2>Why Use Campus Hub?</h2>
         <div className="grid-container">
@@ -67,7 +64,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* User Roles Section */}
       <section className="roles-section">
         <h2>For Everyone on Campus</h2>
         <div className="grid-container">
@@ -79,8 +75,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* Footer */}
       <footer className="footer">
         <p> Smart Campus Complaint System</p>
       </footer>

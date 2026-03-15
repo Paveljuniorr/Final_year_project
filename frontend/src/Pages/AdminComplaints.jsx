@@ -19,7 +19,6 @@ export default function AdminComplaints() {
       });
       setComplaints(res.data);
     } catch (err) { 
-      // Fixed 'err' is defined but never used
       console.error("Failed to fetch complaints:", err.message); 
     } finally {
       setLoading(false);

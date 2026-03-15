@@ -1,16 +1,17 @@
 import User from "../models/User.js";
+import Complaint from "../models/Complaint.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
+// 1. Register Student
 export const registerStudent = async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: "User already exists" });
 
-    // Force role to student for public registration
     const user = await User.create({ name, email, password, role: "student" });
     res.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role, token: generateToken(user._id) });
   } catch (error) {
@@ -18,6 +19,7 @@ export const registerStudent = async (req, res) => {
   }
 };
 
+// 2. Login User
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -31,9 +33,10 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// 3. Admin Create User (The one that was missing!)
 export const adminCreateUser = async (req, res) => {
   const { name, email, password, role } = req.body;
-
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: "User already exists" });
@@ -42,7 +45,7 @@ export const adminCreateUser = async (req, res) => {
       name,
       email,
       password,
-      role: role || "teacher", // Defaults to teacher if not specified
+      role: role || "teacher", 
     });
 
     res.status(201).json({
@@ -53,33 +56,36 @@ export const adminCreateUser = async (req, res) => {
     res.status(500).json({ message: "Error creating user" });
   }
 };
-// Get all users (Admin only)
+
+// 4. Get All Users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}).select("-password"); // Don't send passwords!
+    const users = await User.find({}).select("-password");
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users" });
   }
 };
 
-// Get counts for dashboard stats
-export const getAdminStats = async (req, res) => {
+// 5. Get Dashboard Stats (Corrected to count reports!)
+export const getStats = async (req, res) => {
   try {
-    const studentCount = await User.countDocuments({ role: "student" });
-    const teacherCount = await User.countDocuments({ role: "teacher" });
-
+    const studentCount = await User.countDocuments({ role: 'student' });
+    const teacherCount = await User.countDocuments({ role: 'teacher' });
+    const reportCount = await Complaint.countDocuments(); 
 
     res.json({
       students: studentCount,
       teachers: teacherCount,
-      reports: 0 // Placeholder until Complaint model is fully integrated
+      reports: reportCount
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching stats" });
+    console.error("Stats Error:", error);
+    res.status(500).json({ message: "Server error fetching statistics" });
   }
 };
-// Update user role (Admin only)
+
+// 6. Update User Role (Also often imported in routes)
 export const updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
@@ -96,13 +102,12 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
-// Delete user (Admin only)
+// 7. Delete User
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     
-    // Safety check: Prevent admin from deleting themselves
     if (user._id.toString() === req.user.id) {
       return res.status(400).json({ message: "You cannot delete your own admin account" });
     }

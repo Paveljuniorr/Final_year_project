@@ -1,8 +1,8 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import e from "express";
 import jwt from "jsonwebtoken";
 
-// ================= REGISTER =================
 export const register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -18,7 +18,7 @@ export const register = async (req, res) => {
   const user = await User.create({
     name,
     email,
-    password, // ✅ RAW password ONLY
+    password, 
     role
   });
 
@@ -32,7 +32,6 @@ export const register = async (req, res) => {
   });
 };
 
-// ================= LOGIN =================
 export const login = async (req, res) => {
   try {
     console.log("LOGIN BODY:", req.body);
@@ -80,3 +79,11 @@ export const login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: "Not authorized as an admin" });
+  }
+};
+export default { register, login };

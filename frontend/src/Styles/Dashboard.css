@@ -53,7 +53,7 @@
 .dashboard-content{
   flex:1;
   padding:30px;
-  background:#6464b1;
+  background:#4ab0eb;
   overflow:auto;
 }
 
@@ -125,3 +125,4 @@ table td{
   background:#f8d7da;
   color:#721c24;
 }
+

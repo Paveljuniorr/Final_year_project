@@ -69,3 +69,24 @@ body {
 .login-card button:hover {
   background: #203a43;
 }
+.signup-text {
+  text-align: center;
+  margin-top: 25px;
+  padding-top: 20px;
+  font-size: 0.9rem;
+  color: #64748b; 
+  border-top: 1px solid #e2e8f0; 
+}
+
+.signup-text a {
+  color: #2c5364; 
+  text-decoration: none;
+  font-weight: 700;
+  margin-left: 5px;
+  transition: all 0.2s ease;
+}
+
+.signup-text a:hover {
+  color: #38bdf8; 
+  text-decoration: underline;
+}

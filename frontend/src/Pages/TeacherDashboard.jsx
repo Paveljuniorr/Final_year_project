@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import API from "../API/axios";
 import ComplaintModal from "../components/ComplaintModal";
-import "../Styles/AdminDashboard.css"; // Reusing the same styling
+import "../Styles/AdminDashboard.css"; 
 
 export default function TeacherDashboard() {
   const [complaints, setComplaints] = useState([]);
@@ -20,7 +20,6 @@ export default function TeacherDashboard() {
       });
       setComplaints(res.data);
     } catch (err) {
-      // Using 'err' to satisfy 'no-unused-vars'
       console.error("Teacher Panel Fetch Error:", err.message);
     } finally {
       setLoading(false);
@@ -99,7 +98,7 @@ export default function TeacherDashboard() {
       {selectedComplaint && (
         <ComplaintModal 
           complaint={selectedComplaint} 
-          isAdmin={true} // Teachers can also provide feedback
+          isAdmin={true}
           onClose={() => setSelectedComplaint(null)} 
           onUpdateStatus={updateStatus} 
         />

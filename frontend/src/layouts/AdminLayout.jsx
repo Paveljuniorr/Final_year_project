@@ -1,5 +1,4 @@
 import AdminSidebar from "../components/AdminSidebar";
-import AdminNavbar from "../components/AdminNavbar";
 import AdminDashboard from "../Pages/AdminDashboard";
 
 const AdminLayout = ({ children }) => {
@@ -8,7 +7,6 @@ const AdminLayout = ({ children }) => {
       <AdminSidebar />
 
       <div className="admin-main">
-        <AdminNavbar />
         <div className="admin-content">{children}</div>
       </div>
     </div>
