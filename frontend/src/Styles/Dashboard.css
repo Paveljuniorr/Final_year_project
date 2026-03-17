@@ -10,7 +10,7 @@
 
 .sidebar{
   width:240px;
-  background:#1f2937;
+  background:rgb(66, 66, 66);
   color:white;
   padding:20px;
   display:flex;
@@ -29,13 +29,13 @@
 
 .sidebar a{
   text-decoration:none;
-  color:#cbd5e1;
+  color:#f1f3f5;
   padding:10px;
   border-radius:6px;
 }
 
 .sidebar a:hover{
-  background:#374151;
+  background:#0abbe7;
 }
 
 .sidebar button{
@@ -43,7 +43,7 @@
   padding:10px;
   border:none;
   background:#ef4444;
-  color:rgb(32, 30, 30);
+  color:rgb(17, 117, 231);
   border-radius:6px;
   cursor:pointer;
 }
@@ -53,14 +53,14 @@
 .dashboard-content{
   flex:1;
   padding:30px;
-  background:#4ab0eb;
+  background:#b0d3c1;
   overflow:auto;
 }
 
 /* Cards */
 
 .card{
-  background:rgb(243, 237, 237);
+  background:rgb(239, 243, 240);
   padding:20px;
   margin-bottom:15px;
   border-radius:8px;
@@ -79,7 +79,7 @@ input, textarea{
 }
 
 button.primary{
-  background:#2563eb;
+  background:#0c44df;
   color:rgb(231, 225, 225);
   border:none;
   padding:10px 15px;
@@ -95,14 +95,14 @@ table{
 }
 
 table th{
-  background:#1f2937;
+  background:#4b99da;
   color:white;
   padding:10px;
 }
 
 table td{
   padding:10px;
-  border-bottom:1px solid #ddd;
+  border-bottom:1px solid #040805;
 }
 .badge{
   padding:6px 12px;

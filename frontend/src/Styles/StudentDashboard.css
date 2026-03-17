@@ -1,6 +1,6 @@
 .student-dashboard {
   padding: 30px;
-  background-color: #f4f7f9;
+  background-color: #f6f8f8;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, sans-serif;
 }
@@ -366,7 +366,7 @@
 }
 
 .status-active {
-  color: #059669 !important; 
+  color: #051396 !important; 
   font-weight: 700 !important;
 }
 

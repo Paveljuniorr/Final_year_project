@@ -3,7 +3,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: rgb(100, 191, 243);
+  background: rgb(71, 111, 243);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -43,7 +43,7 @@
 }
 
 .auth-btn {
-  background: #667eea;
+  background: #0b33e4;
   color: white;
   padding: 12px;
   border: none;
@@ -66,7 +66,7 @@
 }
 
 .auth-footer a {
-  color: #667eea;
+  color: #11a0f3;
   text-decoration: none;
   font-weight: bold;
 }

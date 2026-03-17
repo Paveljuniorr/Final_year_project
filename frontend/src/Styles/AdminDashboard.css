@@ -1,13 +1,13 @@
 :root {
-  --bg-main: #f8fafc;
-  --sidebar-bg: #0f172a;
+  --bg-main: #f4fdf5;
+  --sidebar-bg: #094474;
   --primary: #2563eb;
   --primary-light: #eff6ff;
   --sky-blue: #38bdf8;
   --text-dark: #0f172a;
   --text-muted: #64748b;
   --border: #e2e8f0;
-  --border-blue: #bfdbfe;
+  --border-blue: #2adfe6;
   --white: #ffffff;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -130,7 +130,7 @@ body {
 
 .inline-create-form {
   display: grid;
-  grid-template-columns: repeat(3, 1fr) auto; /* 3 inputs then the button */
+  grid-template-columns: repeat(3, 1fr) auto;
   gap: 1.25rem;
   align-items: flex-end;
 }

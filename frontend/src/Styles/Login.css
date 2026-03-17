@@ -6,7 +6,7 @@
 }
 
 body {
-  background: #f1eded;
+  background: #f7f4f4;
 }
 
 .login-container {
@@ -17,11 +17,11 @@ body {
   justify-content: center;
   align-items: center;
 
- background-color: rgba(101, 192, 228, 0.801);
+ background-color: rgba(33, 101, 202, 0.801);
 }
 
 .login-card {
-  background: rgb(231, 238, 238);
+  background: rgb(251, 251, 252);
   padding: 39px;
   width: 100%;
   max-width: 520px;
@@ -74,12 +74,12 @@ body {
   margin-top: 25px;
   padding-top: 20px;
   font-size: 0.9rem;
-  color: #64748b; 
+  color: #0d0c0e; 
   border-top: 1px solid #e2e8f0; 
 }
 
 .signup-text a {
-  color: #2c5364; 
+  color: #8e48eb; 
   text-decoration: none;
   font-weight: 700;
   margin-left: 5px;
