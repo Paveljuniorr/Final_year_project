@@ -14,7 +14,7 @@ export default function StudentSidebar(){
 
     <div className="sidebar">
 
-      <h2>Student Panel</h2>
+      <h2>Student Portal</h2>
 
       <nav>
 
