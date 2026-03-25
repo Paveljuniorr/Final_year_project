@@ -36,7 +36,7 @@ export default function HomePage() {
   return (
     <div className="homepage-container">
       <nav className="navbar">
-        <div className="nav-logo">CampusHub</div>
+        <div className="nav-logo">CampusCom</div>
         <div className="nav-buttons">
           <Link to="/login" className="btn-secondary">Login</Link>
           <Link to="/register" className="btn-primary">Get Started</Link>
@@ -53,7 +53,7 @@ export default function HomePage() {
       </header>
 
       <section className="features-grid">
-        <h2>Why Use Campus Hub?</h2>
+        <h2>Why Use Campus Com?</h2>
         <div className="grid-container">
           {features.map((feature, index) => (
             <div key={index} className="feature-card">
